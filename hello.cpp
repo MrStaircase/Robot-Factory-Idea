@@ -1,16 +1,7 @@
-/* primitives.c ... */
-
-/*
- * This example creates an SDL window and renderer, and then draws some lines,
- * rectangles and points to it every frame.
- *
- * This code is public domain. Feel free to use it for any purpose!
- */
-
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
+
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-
 #include "actual_data.hpp"
 
 /* We will use this renderer to draw into this window every frame. */
@@ -66,14 +57,14 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     rect.w = 50;
     rect.h = 50;
 
-    color c1 = get_color();
+    // color c1 = get_color();
 
     /* as you can see from this, rendering draws over whatever was drawn before it. */
     SDL_SetRenderDrawColor(renderer, 33, 33, 33, SDL_ALPHA_OPAQUE);  /* dark gray, full alpha */
     SDL_RenderClear(renderer);  /* start with a blank canvas. */
 
     /* draw a filled rectangle in the middle of the canvas. */
-    SDL_SetRenderDrawColor(renderer, c1.r, c1.g, c1.b, SDL_ALPHA_OPAQUE);  /* blue, full alpha */
+    // SDL_SetRenderDrawColor(renderer, c1.r, c1.g, c1.b, SDL_ALPHA_OPAQUE);  /* blue, full alpha */
     rect.x = point.x + SDL_cos(angle) * radius;
     rect.y = point.y + SDL_sin(angle) * radius;
     SDL_RenderFillRect(renderer, &rect);

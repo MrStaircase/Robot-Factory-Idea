@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(hello)
+project(main)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -13,11 +13,7 @@ add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(vendored/entt EXCLUDE_FROM_ALL)
 
 # Create your game executable target as usual
-add_executable(hello WIN32 hello.cpp data.cpp actual_data.cpp)
-
-add_executable(editor WIN32 editor.cpp data.cpp actual_data.cpp)
+add_executable(main WIN32 main.cpp data.cpp actual_data.cpp game.cpp editor.cpp)
 
 # Link to the actual SDL3 library.
-target_link_libraries(hello PRIVATE SDL3::SDL3 EnTT::EnTT)
-
-target_link_libraries(editor PRIVATE EnTT::EnTT)
+target_link_libraries(main PRIVATE SDL3::SDL3 EnTT::EnTT)
