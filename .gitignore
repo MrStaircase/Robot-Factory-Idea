@@ -1,0 +1,146 @@
+# =========================
+
+# C++ / CMake
+
+# =========================
+
+# Build directories
+
+build/
+build-*/
+cmake-build-*/
+out/
+
+# CMake generated files
+
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+Makefile
+
+# CMake user files
+
+CMakeUserPresets.json
+
+# =========================
+
+# Compiled binaries
+
+# =========================
+
+*.o
+*.obj
+*.lo
+*.a
+*.lib
+*.so
+*.so.*
+*.dll
+*.dylib
+*.exe
+*.out
+
+# =========================
+
+# Debug / Release output
+
+# =========================
+
+Debug/
+Release/
+RelWithDebInfo/
+MinSizeRel/
+
+# =========================
+
+# Visual Studio
+
+# =========================
+
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# =========================
+
+# VS Code
+
+# =========================
+
+.vscode/
+
+# =========================
+
+# CLion / JetBrains
+
+# =========================
+
+.idea/
+*.iml
+
+# =========================
+
+# macOS
+
+# =========================
+
+.DS_Store
+
+# =========================
+
+# Windows
+
+# =========================
+
+Thumbs.db
+Desktop.ini
+
+# =========================
+
+# Linux
+
+# =========================
+
+*~
+
+# =========================
+
+# SDL3
+
+# =========================
+
+# Ignore SDL build artifacts if SDL is vendored
+
+vendored/SDL/build/
+vendored/SDL/cmake-build-*/
+vendored/SDL/CMakeCache.txt
+vendored/SDL/CMakeFiles/
+vendored/SDL/cmake_install.cmake
+vendored/SDL/Makefile
+
+# SDL generated binaries/libraries
+
+vendored/SDL/*.dll
+vendored/SDL/*.so
+vendored/SDL/*.dylib
+vendored/SDL/*.lib
+vendored/SDL/*.a
+
+# =========================
+
+# Temporary files
+
+# =========================
+
+*.tmp
+*.temp
+*.log
+*.swp
+*.swo
+*.bak
+EOF
