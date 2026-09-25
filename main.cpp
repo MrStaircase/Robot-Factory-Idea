@@ -42,6 +42,8 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 {
     game.iterate();
     editor.iterate();
+    
+    SDL_RenderPresent(renderer);
 
     return SDL_APP_CONTINUE;
 }

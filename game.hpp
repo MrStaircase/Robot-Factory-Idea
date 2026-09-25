@@ -6,7 +6,7 @@
 
 class Game{
 public:
-    bool init(SDL_Window** window, SDL_Renderer** renderer);
+    bool init(SDL_Window** window, SDL_Renderer** _renderer);
     void iterate();
     bool event(const SDL_Event& event);
     void quit();

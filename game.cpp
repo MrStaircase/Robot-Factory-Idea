@@ -33,7 +33,6 @@ void Game::iterate(){
     rect.y = point.y + SDL_sin(angle) * radius;
     SDL_RenderFillRect(renderer, &rect);
 
-    SDL_RenderPresent(renderer);
 }
 
 bool Game::event(const SDL_Event& event){

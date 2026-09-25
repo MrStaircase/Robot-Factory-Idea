@@ -1,51 +1,57 @@
 #include "editor.hpp"
 
-bool Editor::init(SDL_Window* window, SDL_Renderer* renderer){
-    // IMGUI_CHECKVERSION();
+#include "imgui.h"
+#include "imgui_impl_sdl3.h"
+#include "imgui_impl_sdlrenderer3.h"
 
-    // ImGui::CreateContext();
+bool Editor::init(SDL_Window* window, SDL_Renderer* _renderer){
+    renderer = _renderer;
 
-    // ImGui::StyleColorsDark();
+    IMGUI_CHECKVERSION();
 
-    // if (!ImGui_ImplSDL3_InitForSDLRenderer(window, renderer))
-    //     return false;
+    ImGui::CreateContext();
 
-    // if (!ImGui_ImplSDLRenderer3_Init(renderer))
-    //     return false;
+    ImGui::StyleColorsDark();
+
+    if (!ImGui_ImplSDL3_InitForSDLRenderer(window, renderer))
+        return false;
+
+    if (!ImGui_ImplSDLRenderer3_Init(renderer))
+        return false;
 
     return true;
 }
 
 void Editor::iterate(){
-    // ImGui_ImplSDLRenderer3_NewFrame();
-    // ImGui_ImplSDL3_NewFrame();
-    // ImGui::NewFrame();
+    ImGui_ImplSDLRenderer3_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
 
-    // ImGui::Begin("Editor");
+    ImGui::Begin("Editor");
 
-    // if (ImGui::Button("Add 16 Red"))
-    // {
-    //     // We'll fill this in once we define the ECS components.
-    // }
+    if (ImGui::Button("Add 16 Red"))
+    {
+        add_color();
+    }
 
-    // ImGui::End();
+    ImGui::End();
 
-    // ImGui::Render();
+    ImGui::Render();
 
-    // ImGui_ImplSDLRenderer3_RenderDrawData(
-    //     ImGui::GetDrawData(),
-    //     nullptr
-    // );
+    ImGui_ImplSDLRenderer3_RenderDrawData(
+        ImGui::GetDrawData(),
+        renderer
+    );
 
 }
 
 void Editor::event(const SDL_Event& event){
-    // ImGui_ImplSDL3_ProcessEvent(&event);
+    ImGui_ImplSDL3_ProcessEvent(&event);
 }
 
 void Editor::quit(){
-    // ImGui_ImplSDLRenderer3_Shutdown();
-    // ImGui_ImplSDL3_Shutdown();
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
 
-    // ImGui::DestroyContext();
+    ImGui::DestroyContext();
 }
