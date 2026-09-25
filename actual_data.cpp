@@ -17,5 +17,3 @@ void add_color(){
     auto& c1 = view.get<color>(view.front());
     c1.r += 16.0f;
 }
-
-Color playerColor(52, 0, 0);

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "data.hpp"
 #include <entt/entt.hpp>
 
 struct color{
@@ -16,5 +15,3 @@ void setup();
 color get_color();
 
 void add_color();
-
-extern Color playerColor;

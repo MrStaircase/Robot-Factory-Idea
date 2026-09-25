@@ -4,11 +4,16 @@ static SDL_Point point;
 static float radius = 100;
 
 bool Game::init(SDL_Window** window, SDL_Renderer** _renderer){
-    if (!SDL_Init(SDL_INIT_VIDEO)) return false;
-
-    if (!SDL_CreateWindowAndRenderer("Hello ECS", 1280, 720, 0, window, _renderer)) return false;
+    if (!SDL_CreateWindowAndRenderer("Hello ECS", 1280, 720, SDL_WINDOW_RESIZABLE, window, _renderer)){
+        SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
+        return false;
+    }
 
     renderer = *_renderer;
+
+    // this line makes sdl maintaine the aspect ratio, even if the window is rezised.
+    // if used imgui does not work properlly
+    // SDL_SetRenderLogicalPresentation(renderer, 640, 480, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
     point.x = 250;
     point.y = 150;

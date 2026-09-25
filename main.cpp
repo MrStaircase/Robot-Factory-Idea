@@ -12,12 +12,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 
-    // if (!SDL_CreateWindowAndRenderer("examples/renderer/primitives", 640, 480, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
-    //     SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
-    //     return SDL_APP_FAILURE;
-    // }
-    // SDL_SetRenderLogicalPresentation(renderer, 640, 480, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-
     setup();
 
     if (!game.init(&window, &renderer))
@@ -42,7 +36,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 {
     game.iterate();
     editor.iterate();
-    
+
     SDL_RenderPresent(renderer);
 
     return SDL_APP_CONTINUE;
