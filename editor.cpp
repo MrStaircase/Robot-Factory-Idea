@@ -1,5 +1,5 @@
 #include "editor.hpp"
 
 int main(){
-    playerColor.r += 15;
+    add_color();
 }

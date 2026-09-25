@@ -42,6 +42,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     point.x = 250;
     point.y = 150;
 
+    setup();
+
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
 
@@ -64,12 +66,14 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     rect.w = 50;
     rect.h = 50;
 
+    color c1 = get_color();
+
     /* as you can see from this, rendering draws over whatever was drawn before it. */
     SDL_SetRenderDrawColor(renderer, 33, 33, 33, SDL_ALPHA_OPAQUE);  /* dark gray, full alpha */
     SDL_RenderClear(renderer);  /* start with a blank canvas. */
 
     /* draw a filled rectangle in the middle of the canvas. */
-    SDL_SetRenderDrawColor(renderer, playerColor.get_r(), playerColor.get_g(), playerColor.get_b(), SDL_ALPHA_OPAQUE);  /* blue, full alpha */
+    SDL_SetRenderDrawColor(renderer, c1.r, c1.g, c1.b, SDL_ALPHA_OPAQUE);  /* blue, full alpha */
     rect.x = point.x + SDL_cos(angle) * radius;
     rect.y = point.y + SDL_sin(angle) * radius;
     SDL_RenderFillRect(renderer, &rect);

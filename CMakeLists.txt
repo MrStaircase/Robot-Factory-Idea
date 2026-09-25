@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(hello)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # set the output directory for built objects.
 # This makes sure that the dynamic library goes into the build directory automatically.
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
@@ -8,6 +10,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
 # This assumes the SDL source is available in vendored/SDL
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
+add_subdirectory(vendored/entt EXCLUDE_FROM_ALL)
 
 # Create your game executable target as usual
 add_executable(hello WIN32 hello.cpp data.cpp actual_data.cpp)
@@ -15,4 +18,6 @@ add_executable(hello WIN32 hello.cpp data.cpp actual_data.cpp)
 add_executable(editor WIN32 editor.cpp data.cpp actual_data.cpp)
 
 # Link to the actual SDL3 library.
-target_link_libraries(hello PRIVATE SDL3::SDL3)
+target_link_libraries(hello PRIVATE SDL3::SDL3 EnTT::EnTT)
+
+target_link_libraries(editor PRIVATE EnTT::EnTT)
