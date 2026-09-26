@@ -7,8 +7,6 @@
 bool Editor::init(SDL_Window* window, SDL_Renderer* _renderer){
     renderer = _renderer;
 
-    IMGUI_CHECKVERSION();
-
     ImGui::CreateContext();
 
     ImGui::StyleColorsDark();
