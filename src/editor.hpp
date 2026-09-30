@@ -4,13 +4,20 @@
 #include "registry.hpp"
 #include <memory>
 
+#include "imgui.h"
+#include "imgui_impl_sdl3.h"
+#include "imgui_impl_sdlrenderer3.h"
+
 class Editor{
 public:
-    bool init(SDL_Window* window, SDL_Renderer* _renderer);
+    Editor(Registry&);
+    bool init(SDL_Window*, SDL_Renderer*);
     void iterate();
-    void event(const SDL_Event& event);
+    void event(const SDL_Event&);
     void quit();
 
 private:
+    Registry& registry;
+    bool is_point = false;
     SDL_Renderer* renderer;
 };

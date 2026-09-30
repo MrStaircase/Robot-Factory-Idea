@@ -1,8 +1,6 @@
 #include "editor.hpp"
 
-#include "imgui.h"
-#include "imgui_impl_sdl3.h"
-#include "imgui_impl_sdlrenderer3.h"
+Editor::Editor(Registry& _registry): registry(_registry) {}
 
 bool Editor::init(SDL_Window* window, SDL_Renderer* _renderer){
     renderer = _renderer;
@@ -27,16 +25,29 @@ void Editor::iterate(){
 
     ImGui::Begin("Editor");
 
-    if (ImGui::Button("Add 16 Red"))
-    {
+    if (ImGui::Button("Add 16 Red")){
         add_color();
+    }
+
+    if (ImGui::Button("Pause")){
+        registry.game_state().paused = !registry.game_state().paused;
     }
 
     Point& p = get_point();
 
-    ImGui::SliderFloat("X", &p.x, 0, 800);
+    if (ImGui::SliderFloat("X", &p.x, 0, 800)){
+        is_point = true;
+    }
     ImGui::SliderFloat("Y", &p.y, 0, 600);
     
+    if (is_point){
+        SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
+        SDL_FRect rect;
+        rect.h = rect.w = 10;
+        rect.x = p.x - (rect.w / 2);
+        rect.y = p.y - (rect.h / 2);
+        SDL_RenderRect(renderer, &rect);
+    }
 
     ImGui::End();
 

@@ -1,7 +1,8 @@
 #include "registry.hpp"
 
 #pragma region Registry::
-void Registry::setup(){
+void Registry::init(){
+    registry.ctx().emplace<GameState>();
     // read from file
 }
 
@@ -33,7 +34,7 @@ Component* Registry::try_get(const entt::entity& entity){
 }
 
 template<typename Component>
-const Component* Registry::try_get(const entt::entity& entity) const{
+const Component* Registry::try_get(const entt::entity& entity) const {
     return registry.try_get<Component>(entity);
 }
 
@@ -48,13 +49,21 @@ void Registry::set(const entt::entity& entity, Component&& value){
 }
 
 template<typename... Components>
-bool Registry::has_all(const entt::entity& entity) const{
+bool Registry::has_all(const entt::entity& entity) const {
     return registry.all_of<Components...>(entity);
 }
 
 template<typename Component>
 void Registry::remove(const entt::entity& entity){
     registry.remove<Component>(entity);
+}
+
+GameState& Registry::game_state(){
+    return registry.ctx().get<GameState>();
+}
+
+const GameState& Registry::game_state() const {
+    return registry.ctx().get<GameState>();
 }
 
 Registry registry1;

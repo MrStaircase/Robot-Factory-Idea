@@ -17,10 +17,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 
     setup();
 
-    if (!game.init(&window, &renderer))
+    mainclass.registry.init();
+
+    if (!mainclass.game.init(&mainclass.window, &mainclass.renderer))
         return SDL_APP_FAILURE;
 
-    if (!editor.init(window, renderer))
+    if (!mainclass.editor.init(mainclass.window, mainclass.renderer))
         return SDL_APP_FAILURE;
 
     return SDL_APP_CONTINUE;
@@ -28,27 +30,27 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 {
-    editor.event(*event);
+    mainclass.editor.event(*event);
 
-    return game.event(*event)
+    return mainclass.game.event(*event)
         ? SDL_APP_CONTINUE
         : SDL_APP_SUCCESS;
 }
 
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
-    game.iterate();
-    editor.iterate();
+    mainclass.game.iterate();
+    mainclass.editor.iterate();
 
-    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(mainclass.renderer);
 
     return SDL_APP_CONTINUE;
 }
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result)
 {
-    game.quit();
-    editor.quit();
+    mainclass.game.quit();
+    mainclass.editor.quit();
 
     SDL_Quit();
 }

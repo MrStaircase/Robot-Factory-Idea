@@ -3,9 +3,19 @@
 #include <SDL3/SDL.h>
 #include "game.hpp"
 #include "editor.hpp"
+#include "registry.hpp"
 
-SDL_Window* window;
-SDL_Renderer* renderer;
+class MainClass{
+public:
+    MainClass(): game(registry), editor(registry){}
 
-Game game;
-Editor editor;
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    
+    Registry registry;
+    Game game;
+    Editor editor;
+
+};
+
+MainClass mainclass;

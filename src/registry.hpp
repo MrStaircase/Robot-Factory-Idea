@@ -2,11 +2,15 @@
 
 #include <entt/entt.hpp>
 
+struct GameState{
+    bool paused = false;
+};
+
 class Registry{
 private:
     entt::registry registry;
 public:
-    void setup();
+    void init();
 
     void destroy(const entt::entity&);
     bool valid(const entt::entity&) const;
@@ -15,19 +19,16 @@ public:
 
     template<typename Component>
     Component& get(const entt::entity&);
-
     template<typename Component>
     const Component& get(const entt::entity&) const;
 
     template<typename Component>
     Component* try_get(const entt::entity&);
-
     template<typename Component>
     const Component* try_get(const entt::entity&) const;
 
     template<typename Component>
     void set(const entt::entity&, const Component&);
-
     template<typename Component>
     void set(const entt::entity&, Component&&);
 
@@ -36,6 +37,9 @@ public:
 
     template<typename Component>
     void remove(const entt::entity&);
+
+    GameState& game_state();
+    const GameState& game_state() const;
 };
 
 extern Registry registry1;
