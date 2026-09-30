@@ -4,6 +4,7 @@
 
 struct GameState{
     bool paused = false;
+    bool next_frame = false;
 };
 
 class Registry{

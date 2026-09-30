@@ -10,7 +10,7 @@ constexpr int FRAME_TIME = MILLISECOND_IN_SECOND / FRAME_RATE_PER_SECOND;
 
 class Game{
 public:
-    Game(const Registry&);
+    Game(Registry&);
     bool init(SDL_Window**, SDL_Renderer**);
     void update(Uint64);
     void iterate();
@@ -18,7 +18,7 @@ public:
     void quit();
 
 private:
-    const Registry& registry;
+    Registry& registry;
     SDL_Renderer* renderer;
     Uint64 last_frame;
     float angle;

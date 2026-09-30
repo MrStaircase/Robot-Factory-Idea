@@ -33,6 +33,10 @@ void Editor::iterate(){
         registry.game_state().paused = !registry.game_state().paused;
     }
 
+    if (ImGui::Button("Next Frame")){
+        registry.game_state().next_frame = true;
+    }
+
     Point& p = get_point();
 
     if (ImGui::SliderFloat("X", &p.x, 0, 800)){

@@ -2,7 +2,7 @@
 
 static float radius = 100;
 
-Game::Game(const Registry& _registry): registry(_registry) {}
+Game::Game(Registry& _registry): registry(_registry) {}
 
 bool Game::init(SDL_Window** window, SDL_Renderer** _renderer){
     if (!SDL_CreateWindowAndRenderer("Hello ECS", 1280, 720, SDL_WINDOW_RESIZABLE, window, _renderer)){
@@ -23,6 +23,12 @@ bool Game::init(SDL_Window** window, SDL_Renderer** _renderer){
 void Game::update(Uint64 delta){
     if (!registry.game_state().paused){
         angle += (double)delta / MILLISECOND_IN_SECOND;
+    }
+    else{
+        if(registry.game_state().next_frame){
+            registry.game_state().next_frame = false;
+            angle += (double)FRAME_TIME / MILLISECOND_IN_SECOND;
+        }
     }
 }
 
