@@ -13,11 +13,12 @@ public:
     Editor(Registry&);
     bool init(SDL_Window*, SDL_Renderer*);
     void iterate();
+    void select_entity();
     void event(const SDL_Event&);
     void quit();
 
 private:
     Registry& registry;
-    bool is_point = false;
+    entt::entity selected;
     SDL_Renderer* renderer;
 };

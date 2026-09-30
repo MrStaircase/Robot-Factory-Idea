@@ -36,6 +36,7 @@ struct DrawRect{
     color c;
 };
 
+struct Selectable{};
 
 class Registry{
 private:

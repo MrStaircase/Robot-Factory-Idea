@@ -4,6 +4,7 @@ Editor::Editor(Registry& _registry): registry(_registry) {}
 
 bool Editor::init(SDL_Window* window, SDL_Renderer* _renderer){
     renderer = _renderer;
+    selected = entt::null;
 
     ImGui::CreateContext();
 
@@ -41,16 +42,11 @@ void Editor::iterate(){
         registry.game_state().next_frame = true;
     }
 
-    auto view = registry.view<AroundAPoint>();
-    AroundAPoint& movement = registry.get<AroundAPoint>(view.front());
-
-    if (ImGui::SliderFloat("X", &movement.p.x, 0, 800)){
-        is_point = true;
-    }
-    ImGui::SliderFloat("Y", &movement.p.y, 0, 600);
-    
-    if (is_point){
+    if (selected != entt::null){
         SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
+        AroundAPoint& movement = registry.get<AroundAPoint>(selected);
+        ImGui::SliderFloat("X", &movement.p.x, 0, 800);
+        ImGui::SliderFloat("Y", &movement.p.y, 0, 600);
         SDL_FRect rect;
         rect.h = rect.w = 10;
         rect.x = movement.p.x - (rect.w / 2);
@@ -69,8 +65,32 @@ void Editor::iterate(){
 
 }
 
+void Editor::select_entity(){
+    float x, y;
+    SDL_GetMouseState(&x, &y);
+    auto view = registry.view<Selectable, DrawRect>();
+    for (entt::entity entity: view){
+        DrawRect& draw_rect = registry.get<DrawRect>(entity);
+        if (x >= draw_rect.rect.x && x <= draw_rect.rect.x + draw_rect.rect.w
+         && y >= draw_rect.rect.y && y <= draw_rect.rect.y + draw_rect.rect.h){
+            selected = entity;
+            return;
+        }
+    }
+    selected = entt::null;
+}
+
 void Editor::event(const SDL_Event& event){
     ImGui_ImplSDL3_ProcessEvent(&event);
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (io.WantCaptureMouse)
+        return;
+    
+    switch(event.type){
+        case SDL_EVENT_MOUSE_BUTTON_DOWN: select_entity(); break;
+    }
 }
 
 void Editor::quit(){

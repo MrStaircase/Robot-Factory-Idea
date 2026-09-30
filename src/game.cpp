@@ -65,7 +65,9 @@ void Game::iterate(){
         rect.w = draw_rect.rect.w;
         rect.h = draw_rect.rect.h;
         rect.x = movement.p.x + SDL_cos(movement.angle) * movement.r - (rect.w / 2);
+        draw_rect.rect.x = rect.x;
         rect.y = movement.p.y + SDL_sin(movement.angle) * movement.r - (rect.h / 2);
+        draw_rect.rect.y = rect.y;
         SDL_RenderFillRect(renderer, &rect);
     }
 }
