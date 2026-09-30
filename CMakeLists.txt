@@ -11,7 +11,11 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(vendored/entt EXCLUDE_FROM_ALL)
 
-add_executable(main WIN32 main.cpp actual_data.cpp game.cpp editor.cpp
+file(GLOB SOURCES CONFIGURE_DEPENDS src/*.cpp)
+
+add_executable(main WIN32 
+    # source files
+    ${SOURCES}
 
     # Dear ImGui
     vendored/imgui/imgui.cpp

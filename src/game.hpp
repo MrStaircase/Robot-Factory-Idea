@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include "actual_data.hpp"
+#include "registry.hpp"
 #include <memory>
 
 class Game{
