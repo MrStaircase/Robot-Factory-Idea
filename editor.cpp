@@ -32,6 +32,12 @@ void Editor::iterate(){
         add_color();
     }
 
+    Point& p = get_point();
+
+    ImGui::SliderFloat("X", &p.x, 0, 800);
+    ImGui::SliderFloat("Y", &p.y, 0, 600);
+    
+
     ImGui::End();
 
     ImGui::Render();
