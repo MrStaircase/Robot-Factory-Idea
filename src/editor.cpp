@@ -26,14 +26,6 @@ void Editor::iterate(){
 
     ImGui::Begin("Editor");
 
-    if (ImGui::Button("Add 16 Red")){
-        auto view = registry.view<DrawRect>();
-        for (entt::entity entity : view){
-            DrawRect& draw_rect = registry.get<DrawRect>(entity);
-            draw_rect.c.r += 16;
-        }
-    }
-
     if (ImGui::Button("Pause")){
         registry.game_state().paused = !registry.game_state().paused;
     }
@@ -43,6 +35,10 @@ void Editor::iterate(){
     }
 
     if (selected != entt::null){
+        if (ImGui::Button("Add 16 Red")){
+            DrawRect& draw_rect = registry.get<DrawRect>(selected);
+            draw_rect.c.r += 16;
+        }
         SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
         AroundAPoint& movement = registry.get<AroundAPoint>(selected);
         ImGui::SliderFloat("X", &movement.p.x, 0, 800);
