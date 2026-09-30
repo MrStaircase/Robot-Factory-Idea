@@ -15,6 +15,7 @@ file(GLOB SOURCES CONFIGURE_DEPENDS src/*.cpp)
 
 add_executable(main WIN32 
     # source files
+    src/registry.cpp
     ${SOURCES}
 
     # Dear ImGui

@@ -4,6 +4,10 @@
 void Registry::init(){
     registry.ctx().emplace<GameState>();
     // read from file
+
+    entt::entity e = registry.create();
+    registry.emplace<DrawRect>(e, Rect{0, 0, 50, 50}, color{0, 0, 0});
+    registry.emplace<AroundAPoint>(e, Point{500, 300}, 100.f, 0.f);
 }
 
 void Registry::destroy(const entt::entity& entity){
@@ -16,46 +20,6 @@ bool Registry::valid(const entt::entity& entity) const{
 
 entt::entity Registry::create_new_entity(){
     return registry.create();
-}
-
-template<typename Component>
-Component& Registry::get(const entt::entity& entity){
-    return registry.get<Component>(entity);
-}
-
-template<typename Component>
-const Component& Registry::get(const entt::entity& entity) const {
-    return registry.get<Component>(entity);
-}
-
-template<typename Component>
-Component* Registry::try_get(const entt::entity& entity){
-    return registry.try_get<Component>(entity);
-}
-
-template<typename Component>
-const Component* Registry::try_get(const entt::entity& entity) const {
-    return registry.try_get<Component>(entity);
-}
-
-template<typename Component>
-void Registry::set(const entt::entity& entity, const Component& value){
-    registry.emplace_or_replace<Component>(entity, value);
-}
-
-template<typename Component>
-void Registry::set(const entt::entity& entity, Component&& value){
-    registry.emplace_or_replace<Component>(entity, std::move(value));
-}
-
-template<typename... Components>
-bool Registry::has_all(const entt::entity& entity) const {
-    return registry.all_of<Components...>(entity);
-}
-
-template<typename Component>
-void Registry::remove(const entt::entity& entity){
-    registry.remove<Component>(entity);
 }
 
 GameState& Registry::game_state(){

@@ -13,6 +13,7 @@ public:
     Game(Registry&);
     bool init(SDL_Window**, SDL_Renderer**);
     void update(Uint64);
+    void try_update(Uint64);
     void iterate();
     bool event(const SDL_Event&);
     void quit();

@@ -21,13 +21,21 @@ bool Game::init(SDL_Window** window, SDL_Renderer** _renderer){
 }
 
 void Game::update(Uint64 delta){
+    auto view = registry.view<AroundAPoint>();
+    for (entt::entity entity : view){
+        AroundAPoint& movement = registry.get<AroundAPoint>(entity);
+        movement.angle += (double)delta / MILLISECOND_IN_SECOND;
+    }
+}
+
+void Game::try_update(Uint64 delta){
     if (!registry.game_state().paused){
-        angle += (double)delta / MILLISECOND_IN_SECOND;
+        update(delta);
     }
     else{
         if(registry.game_state().next_frame){
             registry.game_state().next_frame = false;
-            angle += (double)FRAME_TIME / MILLISECOND_IN_SECOND;
+            update(FRAME_TIME);
         }
     }
 }
@@ -38,29 +46,28 @@ void Game::iterate(){
 
     if (delta > FRAME_TIME){
         last_frame += FRAME_TIME;
-        update(FRAME_TIME);
+        try_update(FRAME_TIME);
     }
     else{
         last_frame = current_frame;
-        update(delta);
+        try_update(delta);
     }
-
-    SDL_FRect rect;
-    rect.w = 50;
-    rect.h = 50;
-
-    Point p = get_point();
-
+    
     SDL_SetRenderDrawColor(renderer, 33, 33, 33, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
-
-    color c1 = get_color();
-
-    SDL_SetRenderDrawColor(renderer, c1.r, c1.g, c1.b, SDL_ALPHA_OPAQUE);
-    rect.x = p.x + SDL_cos(angle) * radius - (rect.w / 2);
-    rect.y = p.y + SDL_sin(angle) * radius - (rect.h / 2);
-    SDL_RenderFillRect(renderer, &rect);
-
+    
+    auto view = registry.view<DrawRect, AroundAPoint>();
+    for (entt::entity entity : view){
+        DrawRect& draw_rect = registry.get<DrawRect>(entity);
+        AroundAPoint& movement = registry.get<AroundAPoint>(entity);
+        SDL_SetRenderDrawColor(renderer, draw_rect.c.r, draw_rect.c.g, draw_rect.c.b, SDL_ALPHA_OPAQUE);
+        SDL_FRect rect;
+        rect.w = draw_rect.rect.w;
+        rect.h = draw_rect.rect.h;
+        rect.x = movement.p.x + SDL_cos(movement.angle) * movement.r - (rect.w / 2);
+        rect.y = movement.p.y + SDL_sin(movement.angle) * movement.r - (rect.h / 2);
+        SDL_RenderFillRect(renderer, &rect);
+    }
 }
 
 bool Game::event(const SDL_Event& event){

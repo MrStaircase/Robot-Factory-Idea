@@ -26,7 +26,11 @@ void Editor::iterate(){
     ImGui::Begin("Editor");
 
     if (ImGui::Button("Add 16 Red")){
-        add_color();
+        auto view = registry.view<DrawRect>();
+        for (entt::entity entity : view){
+            DrawRect& draw_rect = registry.get<DrawRect>(entity);
+            draw_rect.c.r += 16;
+        }
     }
 
     if (ImGui::Button("Pause")){
@@ -37,19 +41,20 @@ void Editor::iterate(){
         registry.game_state().next_frame = true;
     }
 
-    Point& p = get_point();
+    auto view = registry.view<AroundAPoint>();
+    AroundAPoint& movement = registry.get<AroundAPoint>(view.front());
 
-    if (ImGui::SliderFloat("X", &p.x, 0, 800)){
+    if (ImGui::SliderFloat("X", &movement.p.x, 0, 800)){
         is_point = true;
     }
-    ImGui::SliderFloat("Y", &p.y, 0, 600);
+    ImGui::SliderFloat("Y", &movement.p.y, 0, 600);
     
     if (is_point){
         SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
         SDL_FRect rect;
         rect.h = rect.w = 10;
-        rect.x = p.x - (rect.w / 2);
-        rect.y = p.y - (rect.h / 2);
+        rect.x = movement.p.x - (rect.w / 2);
+        rect.y = movement.p.y - (rect.h / 2);
         SDL_RenderRect(renderer, &rect);
     }
 
