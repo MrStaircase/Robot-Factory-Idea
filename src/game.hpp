@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include "registry.hpp"
 #include <memory>
+#include "save.hpp"
 
 constexpr int MILLISECOND_IN_SECOND = 1000;
 constexpr int FRAME_RATE_PER_SECOND = 60;

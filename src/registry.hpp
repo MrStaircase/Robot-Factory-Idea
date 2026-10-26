@@ -93,4 +93,6 @@ public:
 
     GameState& game_state();
     const GameState& game_state() const;
+
+    const entt::registry& get_registry() const;
 };

@@ -9,13 +9,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
+add_subdirectory(vendored/json EXCLUDE_FROM_ALL)
 add_subdirectory(vendored/entt EXCLUDE_FROM_ALL)
 
 file(GLOB SOURCES CONFIGURE_DEPENDS src/*.cpp)
 
 add_executable(main WIN32 
     # source files
-    src/registry.cpp
     ${SOURCES}
 
     # Dear ImGui
@@ -32,4 +32,4 @@ target_include_directories(main PRIVATE
     vendored/imgui/backends
 )
 
-target_link_libraries(main PRIVATE SDL3::SDL3 EnTT::EnTT)
+target_link_libraries(main PRIVATE SDL3::SDL3 EnTT::EnTT nlohmann_json::nlohmann_json)

@@ -80,5 +80,6 @@ bool Game::event(const SDL_Event& event){
 }
 
 void Game::quit(){
+    save_registry(registry.get_registry(), "temp_save.json");
     SDL_DestroyRenderer(renderer);
 }

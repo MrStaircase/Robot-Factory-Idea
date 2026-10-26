@@ -36,6 +36,10 @@ const GameState& Registry::game_state() const {
     return registry.ctx().get<GameState>();
 }
 
+const entt::registry& Registry::get_registry() const {
+    return registry;
+}
+
 Registry registry1;
 
 #pragma endregion
