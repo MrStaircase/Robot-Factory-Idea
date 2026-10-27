@@ -1,6 +1,9 @@
 #pragma once
 
 #include <entt/entt.hpp>
+#include <nlohmann/json.hpp>
+#include "data.hpp"
+#include "save.hpp"
 
 struct GameState{
     bool paused = false;
@@ -29,14 +32,73 @@ struct AroundAPoint{
     Point p;
     float r;
     float angle;
+
+    void serialize(nlohmann::json& json) const {
+        json = {
+            {"point", {{"x", p.x}, {"y", p.y}}},
+            {"radius", r},
+            {"angle", angle}
+        };
+    }
+
+    static AroundAPoint createInstance(const nlohmann::json& data) {
+        return AroundAPoint{
+            Point{
+                data.at("point").at("x").get<float>(),
+                data.at("point").at("y").get<float>()
+            },
+            data.at("radius").get<float>(),
+            data.at("angle").get<float>()
+        };
+    }
+
+    static inline const bool registered =
+        DataManager::instance().registerType<AroundAPoint>("ArountAPoint");
 };
 
 struct DrawRect{
     Rect rect;
     color c;
+
+    void serialize(nlohmann::json& json) const {
+        json = {
+            {"Rect", {{"x", rect.x}, {"y", rect.y}, {"h", rect.h}, {"w", rect.w}}},
+            {"color", {{"r", c.r}, {"g", c.g}, {"b", c.b}}}
+        };
+    }
+
+    static DrawRect createInstance(const nlohmann::json& data) {
+        return DrawRect{
+            Rect{
+                data.at("Rect").at("x").get<float>(),
+                data.at("Rect").at("y").get<float>(),
+                data.at("Rect").at("h").get<float>(),
+                data.at("Rect").at("w").get<float>()
+            },
+            color{
+                data.at("color").at("r").get<float>(),
+                data.at("color").at("g").get<float>(),
+                data.at("color").at("b").get<float>()
+            }
+        };
+    }
+
+    static inline const bool registered =
+        DataManager::instance().registerType<DrawRect>("DrawRect");
 };
 
-struct Selectable{};
+struct Selectable{
+    void serialize(nlohmann::json& json) const {
+        json = {};
+    }
+
+    static Selectable createInstance(const nlohmann::json& data) {
+        return Selectable{};
+    }
+
+    static inline const bool registered =
+        DataManager::instance().registerType<Selectable>("Selectable");
+};
 
 class Registry{
 private:

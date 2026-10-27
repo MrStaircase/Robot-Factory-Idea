@@ -2,18 +2,20 @@
 
 #pragma region Registry::
 void Registry::init(){
+    registry = load_registry("temp_save.json");
     registry.ctx().emplace<GameState>();
     // TODO: read from file
 
-    entt::entity e = registry.create();
-    registry.emplace<DrawRect>(e, Rect{0, 0, 50, 50}, color{0, 0, 0});
-    registry.emplace<AroundAPoint>(e, Point{500, 300}, 100.f, 0.f);
-    registry.emplace<Selectable>(e);
 
-    e = registry.create();
-    registry.emplace<DrawRect>(e, Rect{0, 0, 150, 50}, color{0, 0, 255});
-    registry.emplace<AroundAPoint>(e, Point{200, 500}, 100.f, 1.5f);
-    registry.emplace<Selectable>(e);
+    // entt::entity e = registry.create();
+    // registry.emplace<DrawRect>(e, Rect{0, 0, 50, 50}, color{0, 0, 0});
+    // registry.emplace<AroundAPoint>(e, Point{500, 300}, 100.f, 0.f);
+    // registry.emplace<Selectable>(e);
+
+    // e = registry.create();
+    // registry.emplace<DrawRect>(e, Rect{0, 0, 150, 50}, color{0, 0, 255});
+    // registry.emplace<AroundAPoint>(e, Point{200, 500}, 100.f, 1.5f);
+    // registry.emplace<Selectable>(e);
 }
 
 void Registry::destroy(const entt::entity& entity){
