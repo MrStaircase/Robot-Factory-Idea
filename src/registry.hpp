@@ -51,10 +51,9 @@ struct AroundAPoint{
             data.at("angle").get<float>()
         };
     }
-
-    static inline const bool registered =
-        DataManager::instance().registerType<AroundAPoint>("ArountAPoint");
 };
+
+REGISTER_COMPONENT(AroundAPoint, "AroundAPoint")
 
 struct DrawRect{
     Rect rect;
@@ -82,23 +81,14 @@ struct DrawRect{
             }
         };
     }
-
-    static inline const bool registered =
-        DataManager::instance().registerType<DrawRect>("DrawRect");
 };
 
-struct Selectable{
-    void serialize(nlohmann::json& json) const {
-        json = {};
-    }
+REGISTER_COMPONENT(DrawRect, "DrawRect")
 
-    static Selectable createInstance(const nlohmann::json& data) {
-        return Selectable{};
-    }
+struct Selectable{};
 
-    static inline const bool registered =
-        DataManager::instance().registerType<Selectable>("Selectable");
-};
+REGISTER_COMPONENT(Selectable, "Selectable")
+
 
 class Registry{
 private:

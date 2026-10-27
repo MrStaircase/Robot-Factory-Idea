@@ -32,6 +32,15 @@ public:
 using PositionX = Property<int, "position_x">;
 using PositionY = Property<int, "position_y">;
 
+template<typename T>
+concept SerializeableComponent = 
+    std::is_empty_v<T> ||
+    requires(const T& component, nlohmann::json& json,
+        const nlohmann::json& data){
+        {component.serialize(json)} -> std::same_as<void>;
+        {T::createInstance(data)} -> std::same_as<T>;
+    };
+
 class DataManager {
     using Serializer = std::function<void(
         const entt::registry&,
@@ -58,7 +67,7 @@ public:
         return manager;
     }
 
-    template<typename T>
+    template<SerializeableComponent T>
     bool registerType(const std::string& name) {
         factories[name].serializer = [name](const entt::registry& registry,
                              entt::entity entity,
@@ -77,10 +86,14 @@ public:
         factories[name].factory = [](entt::registry& registry,
                              entt::entity entity,
                              const nlohmann::json& data) {
-            registry.emplace<T>(
-                entity,
-                T::createInstance(data)
-            );
+            if constexpr (std::is_empty_v<T>) {
+                registry.emplace<T>(entity);
+            } else {
+                registry.emplace<T>(
+                    entity,
+                    T::createInstance(data)
+                );
+            }
         };
 
         return true;
@@ -100,6 +113,12 @@ public:
         it->second.factory(registry, entity, data);
     }
 };
+
+#define REGISTER_COMPONENT(Type, Name) \
+    namespace { \
+        inline const bool Type##_registered = \
+            DataManager::instance().registerType<Type>(Name); \
+    }
 
 struct DataTypeA{
     std::string point;
@@ -121,7 +140,6 @@ struct DataTypeA{
             data.at("angle").get<float>()
         };
     }
-
-    static inline const bool registered =
-        DataManager::instance().registerType<DataTypeA>("DataTypeA");
 };
+
+REGISTER_COMPONENT(DataTypeA, "DataTypeA")
