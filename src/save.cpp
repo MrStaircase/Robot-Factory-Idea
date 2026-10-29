@@ -2,54 +2,54 @@
 
 
 void save_registry(const entt::registry& registry, const std::string& filename){
-    nlohmann::json data;
-    data["entities"] = nlohmann::json::array();
+    // nlohmann::json data;
+    // data["entities"] = nlohmann::json::array();
 
-    for (entt::entity entity: registry.view<entt::entity>()){
-        nlohmann::json json;
+    // for (entt::entity entity: registry.view<entt::entity>()){
+    //     nlohmann::json json;
 
-        json["id"] = entity;
+    //     json["id"] = entity;
 
-        for (const auto& [name, callbacks]: DataManager::instance().factories){
-            callbacks.serializer(registry, entity, json);
-        }
+    //     for (const auto& [name, callbacks]: DataManager::instance().factories){
+    //         callbacks.serializer(registry, entity, json);
+    //     }
         
-        data["entities"].emplace_back(json);
-    }
+    //     data["entities"].emplace_back(json);
+    // }
 
-    std::ofstream file(filename);
+    // std::ofstream file(filename);
 
-    file << std::setw(4) << data << std::endl;
+    // file << std::setw(4) << data << std::endl;
 }
 
 entt::registry load_registry(const std::string& filename){
-    std::ifstream file(filename);
+    // std::ifstream file(filename);
 
-    if (!file){
-        return entt::registry();
-    }
+    // if (!file){
+    //     return entt::registry();
+    // }
 
-    nlohmann::json json;
-    file >> json;
+    // nlohmann::json json;
+    // file >> json;
 
     entt::registry registry;
 
-    for (const auto& entityData : json.at("entities")) {
-        entt::entity entity = registry.create();
+    // for (const auto& entityData : json.at("entities")) {
+    //     entt::entity entity = registry.create();
 
-        for (auto it = entityData.begin(); it != entityData.end(); ++it) {
-            if (it.key() == "id") {
-                continue;
-            }
+    //     for (auto it = entityData.begin(); it != entityData.end(); ++it) {
+    //         if (it.key() == "id") {
+    //             continue;
+    //         }
 
-            DataManager::instance().create(
-                it.key(),
-                registry,
-                entity,
-                it.value()
-            );
-        }
-    }
+    //         DataManager::instance().create(
+    //             it.key(),
+    //             registry,
+    //             entity,
+    //             it.value()
+    //         );
+    //     }
+    // }
 
     return registry;
 }

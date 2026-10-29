@@ -15,7 +15,16 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
     
-    mainclass.registry.init();
+    mainclass.registry.register_component<DrawRect>(DrawRect::json_key);
+    mainclass.registry.register_component<AroundAPoint>(AroundAPoint::json_key);
+    mainclass.registry.register_component<Selectable>(Selectable::json_key);
+
+    mainclass.registry.load("temp_save.json");
+    try{
+    }
+    catch(...){
+        mainclass.registry.init();
+    }
 
     if (!mainclass.game.init(&mainclass.window, &mainclass.renderer))
         return SDL_APP_FAILURE;

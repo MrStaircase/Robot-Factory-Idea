@@ -3,143 +3,163 @@
 #include <string>
 #include <nlohmann/json.hpp>
 #include <entt/entt.hpp>
-template<std::size_t N>
-struct FixedString {
-    char value[N];
-
-    constexpr FixedString(char const (&s)[N]) {
-        for (std::size_t i = 0; i < N; ++i)
-            value[i] = s[i];
-    }
-
-    constexpr std::string_view view() const {
-        return {value, N - 1};
-    }
-};
-
-template<typename T, FixedString Name>
-class Property {
-public:
-    static constexpr auto json_name = Name;
-
-    T value{};
-
-    constexpr std::string get_name() const {
-        return std::string(json_name.view());
-    }
-};
-
-using PositionX = Property<int, "position_x">;
-using PositionY = Property<int, "position_y">;
 
 template<typename T>
-concept SerializeableComponent = 
-    std::is_empty_v<T> ||
-    requires(const T& component, nlohmann::json& json,
-        const nlohmann::json& data){
-        {component.serialize(json)} -> std::same_as<void>;
-        {T::createInstance(data)} -> std::same_as<T>;
-    };
+concept HasJsonKey = requires {
+    { T::json_key } -> std::convertible_to<std::string>;
+};
 
-class DataManager {
+template<typename T>
+concept SerializableComponent =
+    HasJsonKey<T> &&
+    (
+        (std::is_empty_v<T> && std::default_initializable<T>)
+        ||
+        requires(
+            const T& const_component,
+            T& mutable_component,
+            nlohmann::json& mutable_json,
+            const nlohmann::json& const_json
+        ) {
+            { to_json(mutable_json, const_component) } -> std::same_as<void>;
+            { from_json(const_json, mutable_component) } -> std::same_as<void>;
+        }
+    );
+
+class DataManager {;
+private:
     using Serializer = std::function<void(
         const entt::registry&,
         entt::entity,
         nlohmann::json&
     )>;
 
-    using Factory = std::function<void(
+    using Deserializer = std::function<void(
         entt::registry&,
         entt::entity,
         const nlohmann::json&
     )>;
 
-    struct Something{
-        Serializer serializer;
-        Factory factory;
+    using HasComponent = std::function<bool(
+        const entt::registry&,
+        entt::entity
+    )>;
+
+    struct ComponentInfo {
+        Serializer serialize;
+        Deserializer deserialize;
+        HasComponent has;
     };
 
-    
+    std::unordered_map<std::string, ComponentInfo> components;
+
 public:
-    std::unordered_map<std::string, Something> factories;
-    static DataManager& instance() {
-        static DataManager manager;
-        return manager;
-    }
+    DataManager() = default;
 
-    template<SerializeableComponent T>
-    bool registerType(const std::string& name) {
-        factories[name].serializer = [name](const entt::registry& registry,
-                             entt::entity entity,
-                             nlohmann::json& json) {
-            if (!registry.all_of<T>(entity)) {
-                return;
-            }
+    template<SerializableComponent T>
+    bool register_component(const std::string& name) {
+        if (components.contains(name)) {
+            throw std::runtime_error(
+                "Component already registered: " + name
+            );
+        }
 
+        ComponentInfo info;
+
+        info.has = [](const entt::registry& registry,
+                      entt::entity entity) {
+            return registry.all_of<T>(entity);
+        };
+
+        info.serialize = [](const entt::registry& registry,
+                            entt::entity entity,
+                            nlohmann::json& json) {
             if constexpr (std::is_empty_v<T>) {
-                json[name] = nlohmann::json::object();
+                json = nlohmann::json::object();
             } else {
-                registry.get<T>(entity).serialize(json[name]);
+                json = registry.get<T>(entity);
             }
         };
 
-        factories[name].factory = [](entt::registry& registry,
-                             entt::entity entity,
-                             const nlohmann::json& data) {
+        info.deserialize = [](entt::registry& registry,
+                              entt::entity entity,
+                              const nlohmann::json& json) {
             if constexpr (std::is_empty_v<T>) {
-                registry.emplace<T>(entity);
+                registry.emplace_or_replace<T>(entity);
             } else {
-                registry.emplace<T>(
+                registry.emplace_or_replace<T>(
                     entity,
-                    T::createInstance(data)
+                    json.get<T>()
                 );
             }
         };
 
+        components.emplace(name, std::move(info));
         return true;
     }
 
-    void create(
-        const std::string& name,
+    bool deregister_component(const std::string& name){
+        if (components.contains(name)) {
+            return components.erase(name) != 0;
+        }
+        return false;
+    }
+
+    nlohmann::json serialize_entity(
+        const entt::registry& registry,
+        entt::entity entity
+    ) const {
+        nlohmann::json result = nlohmann::json::object();
+
+        for (std::unordered_map<std::string, ComponentInfo>::const_iterator it = components.cbegin();
+            it != components.cend();
+            ++it) {
+            const std::string& name = it->first;
+            const ComponentInfo& info = it->second;
+
+            if (!info.has(registry, entity)) {
+                continue;
+            }
+
+            info.serialize(registry, entity, result[name]);
+        }
+
+        return result;
+    }
+
+    void deserialize_entity(
         entt::registry& registry,
         entt::entity entity,
-        const nlohmann::json& data
+        const nlohmann::json& json
     ) const {
-        auto it = factories.find(name);
+        if (!json.is_object()) {
+            throw std::runtime_error(
+                "Entity component data must be a JSON object"
+            );
+        }
 
-        if (it == factories.end())
-            throw std::runtime_error("Unknown component: " + name);
+        for (nlohmann::json::const_iterator it = json.begin(); it != json.end(); ++it) {
+            std::unordered_map<std::string, ComponentInfo>::const_iterator component_it = components.find(it.key());
 
-        it->second.factory(registry, entity, data);
+            if (component_it == components.end()) {
+                throw std::runtime_error(
+                    "Unknown component type: " + it.key()
+                );
+            }
+
+            component_it->second.deserialize(
+                registry,
+                entity,
+                it.value()
+            );
+        }
+    }
+
+    bool is_registered(const std::string& name) const {
+        return components.contains(name);
+    }
+
+    std::size_t registered_count() const {
+        return components.size();
     }
 };
-
-#define REGISTER_COMPONENT(Type, Name) \
-    namespace { \
-        inline const bool Type##_registered = \
-            DataManager::instance().registerType<Type>(Name); \
-    }
-
-struct DataTypeA{
-    std::string point;
-    float radius;
-    float angle;
-
-    void serialize(nlohmann::json& json) const {
-        json = {
-            {"point", point},
-            {"radius", radius},
-            {"angle", angle}
-        };
-    }
-
-    static DataTypeA createInstance(const nlohmann::json& data) {
-        return DataTypeA{
-            data.at("point").get<std::string>(),
-            data.at("radius").get<float>(),
-            data.at("angle").get<float>()
-        };
-    }
-};
-
-REGISTER_COMPONENT(DataTypeA, "DataTypeA")
