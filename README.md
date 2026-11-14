@@ -1,5 +1,7 @@
 # Robot Factory Idea
 
+[Link to google docs](https://docs.google.com/document/d/1M1AGyH8KFgX8X7fpqlFgev72mYzMa0RFIua9YDlpg8k/edit?tab=t.0)
+
 This is a game idea, but feel free to bring up other ideas.
 
 ## Concept: Robot Fleet Manager
