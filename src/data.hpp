@@ -21,13 +21,7 @@ concept JsonConvertible = requires(
 };
 
 template<typename T>
-concept SerializeableComponent = HasJsonKey<T> && JsonConvertible<T>;
-
-template<typename T>
-concept EmptyComponent =
-    HasJsonKey<T> &&
-    std::is_empty_v<T> &&
-    std::default_initializable<T>;
+concept SerializableComponent = HasJsonKey<T> && JsonConvertible<T>;
 
 class DataManager {;
 private:
@@ -64,7 +58,7 @@ public:
         return manager;
     }
 
-    template<SerializeableComponent T>
+    template<SerializableComponent T>
     bool register_component(){
         ComponentFactory factory;
         
@@ -93,38 +87,6 @@ public:
 
         factories[T::json_key] = factory;
 
-        return true;
-    }
-
-    template<EmptyComponent T>
-    bool register_component(){
-        ComponentFactory factory;
-
-        factory.serialize = [](
-            const entt::registry& registry,
-            const entt::entity& entity,
-            nlohmann::json& json
-        ){
-            json = nlohmann::json::object();
-        };
-
-        factory.deserialize = [](
-            entt::registry& registry,
-            const entt::entity& entity,
-            const nlohmann::json& json
-        ){
-            registry.emplace_or_replace<T>(entity);
-        };
-
-        factory.has = [](
-            const entt::registry& registry,
-            const entt::entity& entity
-        ){
-            return registry.all_of<T>(entity);
-        };
-
-        factories[T::json_key] = factory;
-        
         return true;
     }
 
@@ -186,8 +148,13 @@ public:
         return factories.contains(json_key);
     }
 
-    template<EmptyComponent T>
+    template<SerializableComponent T>
     bool is_registred() const {
+        return factories.contains(T::json_key);
+    }
+
+    template<SerializableComponent T>
+    bool is_registred(const T& t) const {
         return factories.contains(T::json_key);
     }
 

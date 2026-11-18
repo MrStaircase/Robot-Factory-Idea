@@ -15,10 +15,11 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 
-    mainclass.registry.load("temp_save.json");
     try{
+        mainclass.registry.load("temp_save.json");
     }
-    catch(...){
+    catch(std::exception e){
+        SDL_Log(e.what());
         mainclass.registry.init();
     }
 

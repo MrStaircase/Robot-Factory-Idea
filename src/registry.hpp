@@ -11,20 +11,25 @@ struct GameState{
 };
 
 struct Color{
-    float r, g, b;
+    float r = 255;
+    float g = 255;
+    float b = 255;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(Color, r, g, b);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Color, r, g, b);
 };
 
-
 struct Point{
-    float x, y;
+    float x = 0;
+    float y = 0;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(Point, x, y);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Point, x, y);
 };
 
 struct Rect{
-    float x, y, h, w;
+    float x = 0;
+    float y = 0;
+    float h = 0;
+    float w = 0;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(Rect, x, y, h, w);
 };
@@ -38,7 +43,6 @@ struct AroundAPoint{
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(AroundAPoint, p, r, angle);
 };
-
 REGISTER_COMPONENT(AroundAPoint);
 
 struct DrawRect{
@@ -54,12 +58,13 @@ REGISTER_COMPONENT(DrawRect);
 
 struct Selectable{
     static constexpr std::string json_key = "Selectable";
+
+    NLOHMANN_JSON_DEFINE_TYPE_INTRUSIVE_EMPTY(Selectable);
 };
+
 REGISTER_COMPONENT(Selectable);
 
-
-template<bool AutomaticRegistration>
-class AutomaticRegistry{
+class Registry{
 private:
     entt::registry registry;
 public:
@@ -207,5 +212,3 @@ public:
         return registry;
     }
 };
-
-using Registry = AutomaticRegistry<true>;
