@@ -39,6 +39,8 @@ struct AroundAPoint{
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(AroundAPoint, p, r, angle);
 };
 
+REGISTER_COMPONENT(AroundAPoint);
+
 struct DrawRect{
     static constexpr std::string json_key = "DrawRect";
 
@@ -48,15 +50,18 @@ struct DrawRect{
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(DrawRect, rect, c);
 };
 
+REGISTER_COMPONENT(DrawRect);
+
 struct Selectable{
     static constexpr std::string json_key = "Selectable";
 };
+REGISTER_COMPONENT(Selectable);
+
 
 template<bool AutomaticRegistration>
 class AutomaticRegistry{
 private:
     entt::registry registry;
-    DataManager data_manager;
 public:
     void init(){
         registry.ctx().emplace<GameState>();
@@ -70,10 +75,6 @@ public:
         registry.emplace<DrawRect>(e, Rect{0, 0, 150, 50}, Color{0, 0, 255});
         registry.emplace<AroundAPoint>(e, Point{200, 500}, 100.f, 1.5f);
         registry.emplace<Selectable>(e);
-
-        data_manager.register_component<DrawRect>(DrawRect::json_key);
-        data_manager.register_component<AroundAPoint>(AroundAPoint::json_key);
-        data_manager.register_component<Selectable>(Selectable::json_key);
     }
 
     void destroy(const entt::entity& entity){
@@ -109,27 +110,10 @@ public:
     template<typename Component>
     void set(const entt::entity& entity, const Component& value){
         registry.emplace_or_replace<Component>(entity, value);
-
-        if constexpr (AutomaticRegistration && SerializableComponent<Component>){
-            if (!data_manager.is_registered(Component::json_key)){
-                data_manager.register_component<Component>(Component::json_key);
-            }
-        }
     }
     template<typename Component>
     void set(const entt::entity& entity, Component&& value){
         registry.emplace_or_replace<Component>(entity, std::move(value));
-
-        if constexpr (AutomaticRegistration && SerializableComponent<Component>){
-            if (!data_manager.is_registered(Component::json_key)){
-                data_manager.register_component<Component>(Component::json_key);
-            }
-        }
-    }
-
-    template<SerializableComponent Component>
-    bool register_component(const std::string& json_key){
-        return data_manager.register_component<Component>(json_key);
     }
 
     template<typename... Components>
@@ -149,13 +133,6 @@ public:
         }
 
         registry.remove<Component>(entity);
-
-        if constexpr (AutomaticRegistration &&
-                  SerializableComponent<Component>) {
-            if (registry.storage<Component>()->empty()) {
-                data_manager.deregister_component(Component::json_key);
-            }
-        }
     }
 
     void save(const std::string& filename) const{
@@ -164,8 +141,7 @@ public:
 
         for (entt::entity entity : registry.view<entt::entity>()) {
             nlohmann::json entity_data =
-                data_manager.serialize_entity(registry, entity);
-
+                DataManager::instance().serialize_entity(registry, entity);
             save_data["entities"].push_back(entity_data);
         }
 
@@ -210,7 +186,7 @@ public:
         for (const nlohmann::json& entity_data : save_data["entities"]) {
             entt::entity entity = registry.create();
 
-            data_manager.deserialize_entity(
+            DataManager::instance().deserialize_entity(
                 registry,
                 entity,
                 entity_data

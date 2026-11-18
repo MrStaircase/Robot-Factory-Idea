@@ -14,10 +14,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-    
-    mainclass.registry.register_component<DrawRect>(DrawRect::json_key);
-    mainclass.registry.register_component<AroundAPoint>(AroundAPoint::json_key);
-    mainclass.registry.register_component<Selectable>(Selectable::json_key);
 
     mainclass.registry.load("temp_save.json");
     try{
