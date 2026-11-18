@@ -3,6 +3,43 @@
 #include "data.hpp"
 #include <math.h>
 
+
+template<typename T>
+concept VectorScalar = requires(
+    const T& a,
+    const T& b,
+    float c,
+    T& mutable_a,
+    T&& a_r_value
+){
+    { a + b } -> std::convertible_to<T>;
+    { a - b } -> std::convertible_to<T>;
+    { a * b } -> std::convertible_to<T>;
+
+    { a * c } -> std::convertible_to<T>;
+    { c * a } -> std::convertible_to<T>;
+    { a / c } -> std::convertible_to<T>;
+    
+    { mutable_a = 0 } -> std::convertible_to<T&>;
+    
+    { a == b } -> std::convertible_to<bool>;
+    { a != b } -> std::convertible_to<bool>;
+    { a == 0 } -> std::convertible_to<bool>;
+    { a != 0 } -> std::convertible_to<bool>;
+
+    {sqrt(a)} -> std::convertible_to<float>;
+
+    T(a);
+    T(std::move(a_r_value));
+
+    { mutable_a = b } -> std::same_as<T&>;
+    { mutable_a = std::move(a_r_value) } -> std::same_as<T&>;
+};
+
+static_assert(VectorScalar<int>);
+static_assert(VectorScalar<float>);
+static_assert(!VectorScalar<std::string>);
+
 struct Vector2;
 struct Vector2I;
 
