@@ -8,7 +8,6 @@ set -e
 # --------------------------------------------------
 
 BUILD_DIR="build"
-BUILD_TYPE="Debug"
 
 # --------------------------------------------------
 # Functions
@@ -17,8 +16,7 @@ BUILD_TYPE="Debug"
 configure() {
     echo "Configuring project..."
 
-    cmake -S . -B "$BUILD_DIR" \
-        -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
+    cmake -S . -B "$BUILD_DIR"
 }
 
 build() {
@@ -44,9 +42,8 @@ run_game() {
 
 run_tests() {
     build
-
     echo "Running tests..."
-    ctest --test-dir "$BUILD_DIR" --output-on-failure
+    "$BUILD_DIR/unit_tests" "$@"
 }
 
 clean() {
@@ -98,8 +95,9 @@ case "${1:---menu}" in
     -r|--run)
         run_game
         ;;
-    -t|--test)
-        run_tests
+    -t|--test) 
+        shift;
+        run_tests "$@"
         ;;
     -c|--clean)
         clean

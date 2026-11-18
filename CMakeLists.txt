@@ -30,7 +30,8 @@ target_link_libraries(game_core PUBLIC
     nlohmann_json::nlohmann_json
 )
 
-target_include_directories(game_core PRIVATE
+target_include_directories(game_core PUBLIC
+    src
     vendored/imgui
     vendored/imgui/backends
 )
