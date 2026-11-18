@@ -10,3 +10,6 @@
 [submodule "vendored/json"]
 	path = vendored/json
 	url = https://github.com/nlohmann/json.git
+[submodule "vendored/Catch2"]
+	path = vendored/Catch2
+	url = https://github.com/catchorg/Catch2.git
