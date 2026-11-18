@@ -1,53 +1,98 @@
 #pragma once
 
 #include <entt/entt.hpp>
+#include <nlohmann/json.hpp>
+#include "data.hpp"
+#include "save.hpp"
 
 struct GameState{
     bool paused = false;
     bool next_frame = false;
 };
 
-struct color{
-    float r;
-    float g;
-    float b;
+struct Color{
+    float r = 255;
+    float g = 255;
+    float b = 255;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Color, r, g, b);
 };
 
 struct Point{
-    float x;
-    float y;
+    float x = 0;
+    float y = 0;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(Point, x, y);
 };
 
 struct Rect{
-    float x;
-    float y;
-    float h;
-    float w;
+    float x = 0;
+    float y = 0;
+    float h = 0;
+    float w = 0;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(Rect, x, y, h, w);
 };
 
 struct AroundAPoint{
+    static constexpr std::string json_key = "AroundAPoint";
+
     Point p;
     float r;
     float angle;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(AroundAPoint, p, r, angle);
 };
+REGISTER_COMPONENT(AroundAPoint);
 
 struct DrawRect{
+    static constexpr std::string json_key = "DrawRect";
+
     Rect rect;
-    color c;
+    Color c;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(DrawRect, rect, c);
 };
 
-struct Selectable{};
+REGISTER_COMPONENT(DrawRect);
+
+struct Selectable{
+    static constexpr std::string json_key = "Selectable";
+
+    NLOHMANN_JSON_DEFINE_TYPE_INTRUSIVE_EMPTY(Selectable);
+};
+
+REGISTER_COMPONENT(Selectable);
 
 class Registry{
 private:
     entt::registry registry;
 public:
-    void init();
+    void init(){
+        registry.ctx().emplace<GameState>();
+        
+        entt::entity e = registry.create();
+        registry.emplace<DrawRect>(e, Rect{0, 0, 50, 50}, Color{0, 0, 0});
+        registry.emplace<AroundAPoint>(e, Point{500, 300}, 100.f, 0.f);
+        registry.emplace<Selectable>(e);
 
-    void destroy(const entt::entity&);
-    bool valid(const entt::entity&) const;
+        e = registry.create();
+        registry.emplace<DrawRect>(e, Rect{0, 0, 150, 50}, Color{0, 0, 255});
+        registry.emplace<AroundAPoint>(e, Point{200, 500}, 100.f, 1.5f);
+        registry.emplace<Selectable>(e);
+    }
 
-    entt::entity create_new_entity();
+    void destroy(const entt::entity& entity){
+        registry.destroy(entity);
+    }
+
+    bool valid(const entt::entity& entity) const{
+        return registry.valid(entity);
+    }
+
+    entt::entity create_new_entity(){
+        return registry.create();
+    }
 
     template<typename Component>
     Component& get(const entt::entity& entity){
@@ -88,9 +133,82 @@ public:
 
     template<typename Component>
     void remove(const entt::entity& entity){
+        if (!registry.all_of<Component>(entity)) {
+            return;
+        }
+
         registry.remove<Component>(entity);
     }
 
-    GameState& game_state();
-    const GameState& game_state() const;
+    void save(const std::string& filename) const{
+        nlohmann::json save_data;
+        save_data["entities"] = nlohmann::json::array();
+
+        for (entt::entity entity : registry.view<entt::entity>()) {
+            nlohmann::json entity_data =
+                DataManager::instance().serialize_entity(registry, entity);
+            save_data["entities"].push_back(entity_data);
+        }
+
+        std::ofstream file(filename);
+
+        if (!file.is_open()) {
+            throw std::runtime_error(
+                "Could not open save file for writing: " + filename
+            );
+        }
+
+        file << save_data.dump(4);
+
+        if (!file) {
+            throw std::runtime_error(
+                "Failed to write save file: " + filename
+            );
+        }
+    }
+    void load(const std::string& filename){
+        std::ifstream file(filename);
+
+        if (!file.is_open()) {
+            throw std::runtime_error(
+                "Could not open save file for reading: " + filename
+            );
+        }
+
+        nlohmann::json save_data;
+        file >> save_data;
+
+        if (!save_data.is_object() ||
+            !save_data.contains("entities") ||
+            !save_data["entities"].is_array()) {
+            throw std::runtime_error(
+                "Invalid save file format: " + filename
+            );
+        }
+
+        registry.clear();
+
+        for (const nlohmann::json& entity_data : save_data["entities"]) {
+            entt::entity entity = registry.create();
+
+            DataManager::instance().deserialize_entity(
+                registry,
+                entity,
+                entity_data
+            );
+        }
+
+        registry.ctx().emplace<GameState>();
+    }
+
+    GameState& game_state(){
+        return registry.ctx().get<GameState>();
+    }
+    const GameState& game_state() const{
+        return registry.ctx().get<GameState>();
+    }
+
+    const entt::registry& get_registry() const{
+        return registry;
+    }
 };

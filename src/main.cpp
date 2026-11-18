@@ -14,8 +14,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-    
-    mainclass.registry.init();
+
+    try{
+        mainclass.registry.load("temp_save.json");
+    }
+    catch(std::exception e){
+        SDL_Log(e.what());
+        mainclass.registry.init();
+    }
 
     if (!mainclass.game.init(&mainclass.window, &mainclass.renderer))
         return SDL_APP_FAILURE;
