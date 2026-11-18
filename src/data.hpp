@@ -67,7 +67,12 @@ public:
             const entt::entity& entity,
             nlohmann::json& json
         ){
-            json =  registry.get<T>(entity);
+            if constexpr (std::is_empty_v<T>){
+                json = nlohmann::json::object();
+            }
+            else{
+                json = registry.get<T>(entity);
+            }
         };
 
         factory.deserialize = [](
