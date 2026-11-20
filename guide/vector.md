@@ -1,6 +1,6 @@
 # What the hell is Vector??
 
-Vector is a generic class that represent mathematical vectors and handles many of the expected functions.
+Vector is a generic class that represent n-dimesional mathematical vectors and handles many of the expected functions.
 
 ## Vector
 

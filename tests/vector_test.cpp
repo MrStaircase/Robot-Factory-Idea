@@ -140,6 +140,26 @@ TEST_CASE("Vector dot product", "[Vector]"){
     REQUIRE(a * a == a.squared_size());
 }
 
+TEST_CASE("Vector scalar addition", "[Vector]"){
+    Vector a{1, 2};
+    int b{2};
+    float c(3.5f);
+
+    REQUIRE(a + b == Vector{3, 4});
+    REQUIRE(b + a == a + b);
+    REQUIRE(a + c == Vector{4.5f, 5.5f});
+    REQUIRE(c + a == a + c);
+}
+
+TEST_CASE("Vector scalar subtraction", "[Vector]"){
+    Vector a{1, 2};
+    int b{2};
+    float c(3.5f);
+
+    REQUIRE(a - b == Vector{-1, 0});
+    REQUIRE(a - c == Vector{-2.5f, -1.5f});
+}
+
 TEST_CASE("Vector scalar product", "[Vector]"){
     Vector a{1, 2};
     int b{2};
@@ -151,7 +171,7 @@ TEST_CASE("Vector scalar product", "[Vector]"){
     REQUIRE(c * a == a * c);
 }
 
-TEST_CASE("Vector division", "[Vector]"){
+TEST_CASE("Vector scalar division", "[Vector]"){
     Vector a{3, 6};
     int b{3};
     float c{1.5f};
@@ -239,6 +259,8 @@ TEST_CASE("Vector2 initialiers", "[Vector]"){
     REQUIRE(c == Vector{3.2f, 5.4f});
     REQUIRE(a == Vector{0.0f, 0.0f});
 
+    REQUIRE(c * 2 == Vector{6.4f, 10.8f});
+
     REQUIRE(!a);
     REQUIRE(b + c == Vector{6.4f, 10.8f});
 
@@ -315,4 +337,18 @@ TEST_CASE("Vector2 angle, rotated", "[Vector]"){
         REQUIRE(RIGHT.x == Catch::Approx(1.0f));
         REQUIRE(RIGHT.y == Catch::Approx(0.0f));
     }
+}
+
+TEST_CASE("Vector element eise product", "[Vector]"){
+    Vector a{1, 3};
+    Vector b{3, 4.5f};
+    
+    REQUIRE(a.element_wise_product(b) == Vector{3, 13.5f});
+}
+
+TEST_CASE("Vector accesor", "[Vector]"){
+    Vector a{1, 3};
+
+    REQUIRE(a.get<1>() == 3);
+    REQUIRE(a.get<int>(0) == 1);
 }

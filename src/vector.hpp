@@ -1,6 +1,13 @@
 #pragma once
 
-#include "data.hpp"
+#include <concepts>
+#include <utility>
+#include <tuple>
+#include <type_traits>
+#include <cmath>
+#include <stdexcept>
+#include <numbers>
+#include <cstddef>
 
 template<typename T>
 concept VectorElement = requires(
@@ -36,16 +43,6 @@ concept VectorElement = requires(
     { mutable_a = std::move(a_r_value) } -> std::same_as<T&>;
 };
 
-template<typename T, typename U>
-concept ScalarOf = VectorElement<U> && requires(
-    const T& s,
-    const U& a 
-){
-    { a * s } -> std::convertible_to<U>;
-    { s * a } -> std::convertible_to<U>;
-    { a / s } -> std::convertible_to<U>;
-};
-
 template<VectorElement... Types>
 class Vector;
 
@@ -59,6 +56,18 @@ template<typename T>
 concept NotVector = !IsVector<std::remove_cvref_t<T>>::value;
 
 template<typename T, typename U>
+concept ScalarOf = NotVector<T> &&
+    std::is_arithmetic_v<std::remove_cvref_t<T>> &&
+    VectorElement<U> && requires(
+    const T& s,
+    const U& a 
+){
+    { a * s } -> std::convertible_to<U>;
+    { s * a } -> std::convertible_to<U>;
+    { a / s } -> std::convertible_to<U>;
+};
+
+template<typename T, typename U>
 concept IsArithmeticAssignable = requires(
     T& t,
     const U& u 
@@ -66,6 +75,17 @@ concept IsArithmeticAssignable = requires(
     {t += u} -> std::convertible_to<T&>;
     {t -= u} -> std::convertible_to<T&>;
 };
+
+template<std::size_t N, typename T, typename... Ts>
+struct RepeatedTypeImpl : RepeatedTypeImpl<N-1, T, Ts..., T>{};
+
+template<typename T, typename... Ts>
+struct RepeatedTypeImpl<0, T, Ts...> {
+    using type = Vector<Ts...>;
+};
+
+template<std::size_t N, typename T>
+using RepeatedType = RepeatedTypeImpl<N, T>::type;
 
 template<VectorElement... Types>
 class Vector{
@@ -123,17 +143,6 @@ private:
             (static_cast<result_type>(std::get<I>(op1.values) * std::get<I>(op2.values)))
         );
     }
-
-    template<std::size_t N, typename T, typename... Ts>
-    struct RepeatedTypeImpl : RepeatedTypeImpl<N-1, T, Ts..., T>{};
-
-    template<typename T, typename... Ts>
-    struct RepeatedTypeImpl<0, T, Ts...> {
-        using type = Vector<Ts...>;
-    };
-    
-    template<std::size_t N, typename T>
-    using RepeatedType = RepeatedTypeImpl<N, T>::type;
     
     using normalized_vector = RepeatedType<dimensions, calculation_type>;
     
@@ -183,6 +192,33 @@ private:
     )
     {
         (op.template operator()<I>(std::get<I>(values)), ...);
+    }
+
+    template<typename T, std::size_t... I>
+    T& get_runtime(std::size_t index, std::index_sequence<I...>) {
+        T* result = nullptr;
+
+        ((index == I ? result = &std::get<I>(values) : result), ...);
+
+        if (result == nullptr)
+            throw std::out_of_range("Vector index out of range");
+
+        return *result;
+    }
+
+    template<typename T, std::size_t... I>
+    const T& get_runtime(
+        std::size_t index,
+        std::index_sequence<I...>
+    ) const {
+        const T* result = nullptr;
+
+        ((index == I ? result = &std::get<I>(values) : result), ...);
+
+        if (result == nullptr)
+            throw std::out_of_range("Vector index out of range");
+
+        return *result;
     }
 
 public:
@@ -256,6 +292,30 @@ public:
         return *this;
     }
 
+    template<std::size_t I>
+    auto& get() {
+        static_assert(I < sizeof...(Types), "Vector index out of bounds");
+        return std::get<I>(values);
+    }
+
+    template<std::size_t I>
+    const auto& get() const {
+        static_assert(I < sizeof...(Types), "Vector index out of bounds");
+        return std::get<I>(values);
+    }
+
+    template<typename T>
+    requires (std::same_as<Types, T> && ...)
+    T& get(std::size_t index) {
+        return get_runtime<T>(index, std::index_sequence_for<Types...>{});
+    }
+
+    template<typename T>
+    requires (std::same_as<Types, T> && ...)
+    const T& get(std::size_t index) const {
+        return get_runtime<T>(index, std::index_sequence_for<Types...>{});
+    }
+
     calculation_type squared_size() const noexcept{
         return dot_helper(*this, *this, std::index_sequence_for<Types...>{});
     }
@@ -324,6 +384,40 @@ public:
         );
     }
 
+    template<typename S>
+    friend auto operator+(
+        const Vector<Types...>& op1,
+        const S& op2
+    )
+    requires (
+        NotVector<S> &&
+        (... && ScalarOf<S, Types>)
+    )
+    {
+        return arithmetic_helper(
+            op1,
+            [&op2]<std::size_t I>(const auto& a){ return a + op2; },
+            std::index_sequence_for<Types...>{}
+        );
+    }
+
+    template<typename S>
+    friend auto operator+(
+        const S& op1,
+        const Vector<Types...>& op2
+    )
+    requires (
+        NotVector<S> &&
+        (... && ScalarOf<S, Types>)
+    )
+    {
+        return arithmetic_helper(
+            op2,
+            [&op1]<std::size_t I>(const auto& a){ return op1 + a; },
+            std::index_sequence_for<Types...>{}
+        );
+    }
+
     template<VectorElement... OtherTypes>
     friend auto operator-(
         const Vector<Types...>& op1,
@@ -335,6 +429,52 @@ public:
             op1,
             [&op2]<std::size_t I>(const auto& a) {
                 return a - std::get<I>(op2.values); 
+            },
+            std::index_sequence_for<Types...>{}
+        );
+    }
+
+    template<typename S>
+    friend auto operator-(
+        const Vector<Types...>& op1,
+        const S& op2
+    )
+    requires (
+        NotVector<S> &&
+        (... && ScalarOf<S, Types>)
+    )
+    {
+        return arithmetic_helper(
+            op1,
+            [&op2]<std::size_t I>(const auto& a){ return a - op2; },
+            std::index_sequence_for<Types...>{}
+        );
+    }
+
+    template<typename S>
+    friend auto operator-(
+        const S& op1,
+        const Vector<Types...>& op2
+    )
+    requires (
+        NotVector<S> &&
+        (... && ScalarOf<S, Types>)
+    )
+    {
+        return arithmetic_helper(
+            op2,
+            [&op1]<std::size_t I>(const auto& a){ return op1 - a; },
+            std::index_sequence_for<Types...>{}
+        );
+    }
+
+    template<VectorElement... OtherTypes>
+    requires (sizeof...(Types) == sizeof...(OtherTypes))
+    auto element_wise_product(const Vector<OtherTypes...>& other) const {
+        return arithmetic_helper(
+            *this,
+            [&other]<std::size_t I>(const auto& a) {
+                return a * std::get<I>(other.values); 
             },
             std::index_sequence_for<Types...>{}
         );
@@ -523,6 +663,9 @@ public:
     Vector2 rotated(const float&) const noexcept;
 };
 
+template<>
+struct IsVector<Vector2> : std::true_type {};
+
 using Vector2F = Vector2;
 
 class Vector2I: public Vector<int, int>{
@@ -538,3 +681,6 @@ public:
     Vector2I& operator=(const Vector2I&);
     Vector2I& operator=(Vector2I&&);
 };
+
+template<>
+struct IsVector<Vector2I> : std::true_type {};
