@@ -522,3 +522,19 @@ public:
 
     Vector2 rotated(const float&) const noexcept;
 };
+
+using Vector2F = Vector2;
+
+class Vector2I: public Vector<int, int>{
+public:
+    using Vector<int, int>::Vector;
+
+    int& x = std::get<0>(this->values);
+    int& y = std::get<1>(this->values);
+
+    Vector2I(const Vector2I&);
+    Vector2I(Vector2I&&);
+
+    Vector2I& operator=(const Vector2I&);
+    Vector2I& operator=(Vector2I&&);
+};

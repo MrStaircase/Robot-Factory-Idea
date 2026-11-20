@@ -47,3 +47,23 @@ Vector2 Vector2::rotated(const float& angle) const noexcept {
     return {x * std::cos(angle) - y * std::sin(angle),
         x * std::sin(angle) + y * std::cos(angle)};
 }
+
+Vector2I::Vector2I(const Vector2I& other) = default;
+Vector2I::Vector2I(Vector2I&& other): Vector(std::move(other)){
+    x = std::get<0>(this->values);
+    y = std::get<1>(this->values);
+}
+
+Vector2I& Vector2I::operator=(const Vector2I& other){
+    Vector<int, int>::operator=(other);
+    x = std::get<0>(this->values);
+    y = std::get<1>(this->values);
+    return *this;
+};
+
+Vector2I& Vector2I::operator=(Vector2I&& other){
+    Vector<int, int>::operator=(std::move(other));
+    x = std::get<0>(this->values);
+    y = std::get<1>(this->values);
+    return *this;
+}
