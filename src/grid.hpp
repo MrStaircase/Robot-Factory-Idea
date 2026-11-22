@@ -9,21 +9,21 @@ public:
     using Coordinates = Vector<Types...>;
     using Index = RepeatedType<dimensions, int>;
 
-    Coordinates center;
-    Coordinates offset;
+    Coordinates origin;
+    Coordinates basis;
 
     Index size = Index{} - 1;
 
     Grid() = default;
 
-    Grid(const Coordinates& _center, const Coordinates& _offset) :
-        center(_center), offset(_offset) { }
+    Grid(const Coordinates& _center, const Coordinates& _basis) :
+        origin(_center), basis(_basis) { }
 
-    Grid(const Coordinates& _center, const Coordinates& _offset, const Index& _size) :
-        center(_center), offset(_offset), size(_size) { }
+    Grid(const Coordinates& _center, const Coordinates& _basis, const Index& _size) :
+        origin(_center), basis(_basis), size(_size) { }
 
     Coordinates get_global_position(const RepeatedType<dimensions, int>& position){
-        return center + offset.element_wise_product(position);
+        return origin + basis.element_wise_product(position);
     }
 
     template<typename... PositionTypes>
@@ -41,8 +41,8 @@ public:
 
     bool is_inside(const Index& position) const {
         for (std::size_t i = 0; i < dimensions; ++i) {
-            const int coordinate = position.template get<int>(i);
-            const int axis_size = size.template get<int>(i);
+            const int coordinate = position[i];
+            const int axis_size = size[i];
             
             if (axis_size != -1 && (coordinate < 0 || coordinate >= axis_size))
                 return false;
@@ -51,15 +51,15 @@ public:
         return true;
     }
 
-    std::vector<Index> get_neighbors(const Index& position) const {
+    std::vector<Index> get_cardinal_neighbors(const Index& position) const {
         std::vector<Index> neighbors;
 
         for (std::size_t axis = 0; axis < dimensions; ++axis) {
             Index negative = position;
             Index positive = position;
 
-            negative.template get<int>(axis) -= 1;
-            positive.template get<int>(axis) += 1;
+            negative[axis] -= 1;
+            positive[axis] += 1;
 
             if (is_inside(negative))
                 neighbors.push_back(negative);
@@ -88,7 +88,7 @@ public:
 
             for (std::size_t axis = 0; axis < dimensions; ++axis) {
 
-                neighbor.template get<int>(axis) += value % 3 - 1;
+                neighbor[axis] += value % 3 - 1;
                 value /= 3;
             }
 
@@ -107,13 +107,26 @@ private:
         Index& index,
         std::index_sequence<I...>
     ) const {
-        ((index.template get<int>(I) = static_cast<int>(
+        ((index[I] = static_cast<int>(
             std::floor(
                 (position.template get<I>() -
-                center.template get<I>()) /
-                offset.template get<I>()
+                origin.template get<I>()) /
+                basis.template get<I>()
             )
         )), ...);
     }
 
+};
+
+class Grid2 : public Grid<float, float>{
+public:
+    using Grid<float, float>::Grid;
+
+    std::vector<Index> get_neighbors_4(const Index& position){
+        return get_cardinal_neighbors(position);
+    }
+
+    std::vector<Index> get_neighbors_8(const Index& position){
+        return get_diagonal_neighbors(position);
+    }
 };

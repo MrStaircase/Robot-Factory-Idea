@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <numbers>
 #include <cstddef>
+#include <ostream>
 
 template<typename T>
 concept VectorElement = requires(
@@ -94,7 +95,7 @@ public:
     using calculation_type = std::conditional_t<
         std::is_floating_point_v<common_type>,
         common_type,
-        double
+        float
     >;
 
     template<VectorElement... OtherTypes>
@@ -195,6 +196,7 @@ private:
     }
 
     template<typename T, std::size_t... I>
+    requires (std::same_as<Types, T> && ...)
     T& get_runtime(std::size_t index, std::index_sequence<I...>) {
         T* result = nullptr;
 
@@ -303,17 +305,25 @@ public:
         static_assert(I < sizeof...(Types), "Vector index out of bounds");
         return std::get<I>(values);
     }
-
-    template<typename T>
-    requires (std::same_as<Types, T> && ...)
-    T& get(std::size_t index) {
-        return get_runtime<T>(index, std::index_sequence_for<Types...>{});
+    
+    common_type& at(std::size_t index) 
+    requires (std::same_as<Types, common_type> && ...){
+        return get_runtime<common_type>(index, std::index_sequence_for<Types...>{});
     }
 
-    template<typename T>
-    requires (std::same_as<Types, T> && ...)
-    const T& get(std::size_t index) const {
-        return get_runtime<T>(index, std::index_sequence_for<Types...>{});
+    const common_type& at(std::size_t index) const 
+    requires (std::same_as<Types, common_type> && ...){
+        return get_runtime<common_type>(index, std::index_sequence_for<Types...>{});
+    }
+
+    common_type& operator[](std::size_t index) 
+    requires (std::same_as<Types, common_type> && ...) {
+        return get_runtime<common_type>(index, std::index_sequence_for<Types...>{});
+    }
+
+    const common_type& operator[](std::size_t index) const 
+    requires (std::same_as<Types, common_type> && ...) {
+        return get_runtime<common_type>(index, std::index_sequence_for<Types...>{});
     }
 
     calculation_type squared_size() const noexcept{
@@ -624,6 +634,18 @@ public:
         );
 
         return *this;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Vector<Types...>& vector) {
+        os << "(";
+
+        [&]<std::size_t... I>(std::index_sequence<I...>) {
+            ((os << (I == 0 ? "" : ", ")
+                << vector.template get<I>()), ...);
+        }(std::index_sequence_for<Types...>{});
+
+        os << ")";
+        return os;
     }
 
     static Vector zero(){

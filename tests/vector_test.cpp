@@ -346,9 +346,24 @@ TEST_CASE("Vector element eise product", "[Vector]"){
     REQUIRE(a.element_wise_product(b) == Vector{3, 13.5f});
 }
 
+template<typename T>
+concept HasAt = requires(const T& v) {
+    v.at(0);
+};
+
 TEST_CASE("Vector accesor", "[Vector]"){
     Vector a{1, 3};
+    int index = 0;
+    ++index;
 
     REQUIRE(a.get<1>() == 3);
-    REQUIRE(a.get<int>(0) == 1);
+
+    REQUIRE(a.at(index) == 3);
+    REQUIRE(a[index] == 3);
+    REQUIRE_THROWS_AS(a.at(4), std::out_of_range);
+    REQUIRE_THROWS_AS(a[4], std::out_of_range);
+
+    static_assert(HasAt<Vector<int, int>>);
+    static_assert(!HasAt<Vector<int, float>>);
+    static_assert(std::same_as<decltype(Vector<int, int>{}.at(0)), int&>);
 }

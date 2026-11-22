@@ -26,7 +26,7 @@ TEST_CASE("Grid is inside", "[Grid]"){
     REQUIRE(!g.is_inside(Vector3{-1, 0, 0}));
 }
 
-TEST_CASE("Grid get_neighbors", "[Grid]") {
+TEST_CASE("Grid get_cardinal_neighbors", "[Grid]") {
     using grid_type = Grid<int, int>;
     SECTION("Returns four neighbors for an interior position") {
         grid_type grid;
@@ -42,7 +42,7 @@ TEST_CASE("Grid get_neighbors", "[Grid]") {
         };
 
         const std::vector<grid_type::Index> actual =
-            grid.get_neighbors(position);
+            grid.get_cardinal_neighbors(position);
 
         REQUIRE(actual.size() == expected.size());
 
@@ -63,7 +63,7 @@ TEST_CASE("Grid get_neighbors", "[Grid]") {
         };
 
         const std::vector<grid_type::Index> actual =
-            grid.get_neighbors(position);
+            grid.get_cardinal_neighbors(position);
 
         REQUIRE(actual.size() == expected.size());
 
@@ -79,7 +79,7 @@ TEST_CASE("Grid get_neighbors", "[Grid]") {
         const grid_type::Index position{0, 5};
 
         const std::vector<grid_type::Index> actual =
-            grid.get_neighbors(position);
+            grid.get_cardinal_neighbors(position);
 
         REQUIRE(actual.size() == 4);
     }
@@ -163,8 +163,8 @@ TEST_CASE("Grid get_index", "[Grid]") {
 
     SECTION("Returns the origin index") {
         grid_type grid;
-        grid.center = {0.0f, 0.0f};
-        grid.offset = {10.0f, 10.0f};
+        grid.origin = {0, 0.0f};
+        grid.basis = {10.0f, 10.0f};
 
         const Vector<float, float> position{0.0f, 0.0f};
 
@@ -175,8 +175,8 @@ TEST_CASE("Grid get_index", "[Grid]") {
 
     SECTION("Returns the correct index for positive positions") {
         grid_type grid;
-        grid.center = {0.0f, 0.0f};
-        grid.offset = {10.0f, 10.0f};
+        grid.origin = {0.0f, 0.0f};
+        grid.basis = {10.0f, 10.0f};
 
         const Vector<float, float> position{25.0f, 35.0f};
 
@@ -187,8 +187,8 @@ TEST_CASE("Grid get_index", "[Grid]") {
 
     SECTION("Handles positions inside the first cell") {
         grid_type grid;
-        grid.center = {0.0f, 0.0f};
-        grid.offset = {10.0f, 10.0f};
+        grid.origin = {0.0f, 0.0f};
+        grid.basis = {10.0f, 10.0f};
 
         const Vector<float, float> position{9.9f, 0.1f};
 
@@ -199,8 +199,8 @@ TEST_CASE("Grid get_index", "[Grid]") {
 
     SECTION("Handles negative positions using floor") {
         grid_type grid;
-        grid.center = {0.0f, 0.0f};
-        grid.offset = {10.0f, 10.0f};
+        grid.origin = {0.0f, 0.0f};
+        grid.basis = {10.0f, 10.0f};
 
         const Vector<float, float> position{-2.0f, 5.0f};
 
@@ -211,8 +211,8 @@ TEST_CASE("Grid get_index", "[Grid]") {
 
     SECTION("Accounts for a non-zero center") {
         grid_type grid;
-        grid.center = {100.0f, 200.0f};
-        grid.offset = {10.0f, 20.0f};
+        grid.origin = {100.0f, 200.0f};
+        grid.basis = {10.0f, 20.0f};
 
         const Vector<float, float> position{125.0f, 250.0f};
 
@@ -223,8 +223,8 @@ TEST_CASE("Grid get_index", "[Grid]") {
 
     SECTION("Supports different spacing on each axis") {
         grid_type grid;
-        grid.center = {0.0f, 0.0f};
-        grid.offset = {5.0f, 20.0f};
+        grid.origin = {0.0f, 0.0f};
+        grid.basis = {5.0f, 20.0f};
 
         const Vector<float, float> position{12.0f, 45.0f};
 
