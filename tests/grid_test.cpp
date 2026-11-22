@@ -233,3 +233,141 @@ TEST_CASE("Grid get_index", "[Grid]") {
         REQUIRE(grid.get_index(position) == expected);
     }
 }
+
+TEST_CASE("Grid2 cardinal neighbors", "[Grid]") {
+    SECTION("Returns four neighbors for an interior position") {
+        Grid2 grid;
+        grid.size = {10, 10};
+
+        const Grid2::Index position{5, 5};
+
+        const std::vector<Grid2::Index> expected{
+            {4, 5}, {6, 5},
+            {5, 4}, {5, 6}
+        };
+
+        const std::vector<Grid2::Index> actual =
+            grid.get_neighbors_4(position);
+
+        REQUIRE(actual.size() == expected.size());
+
+        for (const Grid2::Index& neighbor : expected) {
+            CHECK(std::find(actual.begin(), actual.end(), neighbor)
+                  != actual.end());
+        }
+    }
+
+    SECTION("Respects grid boundaries") {
+        Grid2 grid;
+        grid.size = {10, 10};
+
+        const Grid2::Index position{0, 0};
+
+        const std::vector<Grid2::Index> expected{
+            {1, 0}, {0, 1}
+        };
+
+        const std::vector<Grid2::Index> actual =
+            grid.get_neighbors_4(position);
+
+        REQUIRE(actual.size() == expected.size());
+
+        for (const Grid2::Index& neighbor : expected) {
+            CHECK(std::find(actual.begin(), actual.end(), neighbor)
+                  != actual.end());
+        }
+    }
+
+    SECTION("Supports unbounded axes") {
+        Grid2 grid;
+        grid.size = {-1, 10};
+
+        const Grid2::Index position{0, 5};
+
+        const std::vector<Grid2::Index> expected{
+            {-1, 5}, {1, 5},
+            {0, 4}, {0, 6}
+        };
+
+        const std::vector<Grid2::Index> actual =
+            grid.get_neighbors_4(position);
+
+        REQUIRE(actual.size() == expected.size());
+
+        for (const Grid2::Index& neighbor : expected) {
+            CHECK(std::find(actual.begin(), actual.end(), neighbor)
+                  != actual.end());
+        }
+    }
+}
+
+TEST_CASE("Grid2 eight neighbors", "[Grid]") {
+    SECTION("Returns eight neighbors for an interior position") {
+        Grid2 grid;
+        grid.size = {10, 10};
+
+        const Grid2::Index position{5, 5};
+
+        const std::vector<Grid2::Index> expected{
+            {4, 4}, {4, 5}, {4, 6},
+            {5, 4},          {5, 6},
+            {6, 4}, {6, 5}, {6, 6}
+        };
+
+        const std::vector<Grid2::Index> actual =
+            grid.get_neighbors_8(position);
+
+        REQUIRE(actual.size() == expected.size());
+
+        for (const Grid2::Index& neighbor : expected) {
+            CHECK(std::find(actual.begin(), actual.end(), neighbor)
+                  != actual.end());
+        }
+    }
+
+    SECTION("Returns three neighbors at a corner") {
+        Grid2 grid;
+        grid.size = {10, 10};
+
+        const Grid2::Index position{0, 0};
+
+        const std::vector<Grid2::Index> expected{
+            {0, 1}, {1, 0}, {1, 1}
+        };
+
+        const std::vector<Grid2::Index> actual =
+            grid.get_neighbors_8(position);
+
+        REQUIRE(actual.size() == expected.size());
+
+        for (const Grid2::Index& neighbor : expected) {
+            CHECK(std::find(actual.begin(), actual.end(), neighbor)
+                  != actual.end());
+        }
+    }
+
+    SECTION("Does not include the original position") {
+        Grid2 grid;
+        grid.size = {10, 10};
+
+        const Grid2::Index position{5, 5};
+
+        const std::vector<Grid2::Index> actual =
+            grid.get_neighbors_8(position);
+
+        CHECK(std::find(actual.begin(), actual.end(), position)
+              == actual.end());
+    }
+
+    SECTION("Supports unbounded grids") {
+        Grid2 grid;
+        grid.size = {-1, -1};
+
+        const Grid2::Index position{0, 0};
+
+        const std::vector<Grid2::Index> actual =
+            grid.get_neighbors_8(position);
+
+        REQUIRE(actual.size() == 8);
+    }
+}
