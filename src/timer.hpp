@@ -11,11 +11,17 @@ public:
 
     bool check_trigger(unsigned long current_time, unsigned delay){
         bool overflow = _last_triggered > current_time;
-        unsigned long elapsed_time = !overflow ? current_time - _last_triggered : unsigned_long_max - _last_triggered + current_time + 1;
+
+        unsigned long elapsed_time =
+            !overflow ?
+            current_time - _last_triggered :
+            unsigned_long_max - _last_triggered + current_time + 1;
+
         if(elapsed_time >= delay){
             _last_triggered += delay;
             return true;
         }
+        
         return false;
     }
 
