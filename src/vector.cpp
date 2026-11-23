@@ -6,8 +6,22 @@ inline const Vector2 Vector2::DOWN{0.0f, 1.0f};
 inline const Vector2 Vector2::LEFT{-1.0f, 0.0f};
 inline const Vector2 Vector2::RIGHT{1.0f, 0.0f};
 
-Vector2::Vector2(const Vector2& other) = default;
+Vector2::Vector2(const Vector2& other): Vector(other){
+    x = std::get<0>(this->values);
+    y = std::get<1>(this->values);
+}
+
 Vector2::Vector2(Vector2&& other): Vector(std::move(other)){
+    x = std::get<0>(this->values);
+    y = std::get<1>(this->values);
+}
+
+Vector2::Vector2(const Vector<float, float>& other): Vector(other){
+    x = std::get<0>(this->values);
+    y = std::get<1>(this->values);
+}
+
+Vector2::Vector2(Vector<float, float>&& other): Vector(std::move(other)){
     x = std::get<0>(this->values);
     y = std::get<1>(this->values);
 }
@@ -48,8 +62,22 @@ Vector2 Vector2::rotated(const float& angle) const noexcept {
         x * std::sin(angle) + y * std::cos(angle)};
 }
 
-Vector2I::Vector2I(const Vector2I& other) = default;
+Vector2I::Vector2I(const Vector2I& other): Vector(other){
+    x = std::get<0>(this->values);
+    y = std::get<1>(this->values);
+}
+
 Vector2I::Vector2I(Vector2I&& other): Vector(std::move(other)){
+    x = std::get<0>(this->values);
+    y = std::get<1>(this->values);
+}
+
+Vector2I::Vector2I(const Vector<int, int>& other): Vector(other){
+    x = std::get<0>(this->values);
+    y = std::get<1>(this->values);
+}
+
+Vector2I::Vector2I(Vector<int, int>&& other): Vector(std::move(other)){
     x = std::get<0>(this->values);
     y = std::get<1>(this->values);
 }

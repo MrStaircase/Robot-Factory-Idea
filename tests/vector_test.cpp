@@ -83,6 +83,7 @@ TEST_CASE("Vector normalize", "[Vector]"){
     REQUIRE(std::get<1>(normal.values) == 0.8f);
     REQUIRE(normal.size() == 1.0f);
 
+    REQUIRE(b.size() == 0);
     REQUIRE_THROWS_AS(b.normalized(), std::overflow_error);
     
     Vector<int, int> normal_keep = a.normalized_keep_types();
@@ -281,6 +282,8 @@ TEST_CASE("Vector2 initialiers", "[Vector]"){
     d.x = 6.0f;
     d.y += 7.0f;
     REQUIRE(d == Vector{6.0f, 7.0f});
+
+    Vector2 e = Vector<int, float>{4, 5};
 }
 
 TEST_CASE("Vector2 angle, rotated", "[Vector]"){
@@ -366,4 +369,100 @@ TEST_CASE("Vector accesor", "[Vector]"){
     static_assert(HasAt<Vector<int, int>>);
     static_assert(!HasAt<Vector<int, float>>);
     static_assert(std::same_as<decltype(Vector<int, int>{}.at(0)), int&>);
+}
+
+TEST_CASE("Vector Manhattan distance", "[Vector][distance]")
+{
+    SECTION("Calculates distance between two 2D vectors")
+    {
+        Vector<int, int> a{2, 3};
+        Vector<int, int> b{5, 7};
+
+        REQUIRE(a.manhattan_distance(b) == 7.0f);
+        REQUIRE(b.manhattan_distance(a) == 7.0f);
+        REQUIRE(manhattan_distance(a, b) == 7.0f);
+    }
+
+    SECTION("Calculates distance with negative coordinates")
+    {
+        Vector<int, int> a{-2, -3};
+        Vector<int, int> b{3, 4};
+
+        REQUIRE(a.manhattan_distance(b) == 12.0f);
+        REQUIRE(manhattan_distance(a, b) == 12.0f);
+    }
+
+    SECTION("Distance to itself is zero")
+    {
+        Vector<int, int> a{4, 8};
+
+        REQUIRE(a.manhattan_distance(a) == 0.0f);
+        REQUIRE(manhattan_distance(a, a) == 0.0f);
+    }
+
+    SECTION("Supports heterogeneous coordinate types")
+    {
+        Vector<int, float> a{2, 3.5f};
+        Vector<float, int> b{5.0f, 7};
+
+        REQUIRE(a.manhattan_distance(b) == 6.5f);
+        REQUIRE(manhattan_distance(a, b) == 6.5f);
+    }
+
+    SECTION("Works with higher-dimensional vectors")
+    {
+        Vector<int, int, int> a{1, 2, 3};
+        Vector<int, int, int> b{4, 6, 8};
+
+        REQUIRE(a.manhattan_distance(b) == 12.0f);
+        REQUIRE(manhattan_distance(a, b) == 12.0f);
+    }
+}
+
+TEST_CASE("Vector maximum distance (Chebyshev distance)", "[Vector][distance]")
+{
+    SECTION("Calculates maximum coordinate difference")
+    {
+        Vector<int, int> a{2, 3};
+        Vector<int, int> b{5, 7};
+
+        REQUIRE(a.chebyshev_distance(b) == 4.0f);
+        REQUIRE(b.chebyshev_distance(a) == 4.0f);
+        REQUIRE(chebyshev_distance(a, b) == 4.0f);
+    }
+
+    SECTION("Calculates distance with negative coordinates")
+    {
+        Vector<int, int> a{-2, -3};
+        Vector<int, int> b{3, 4};
+
+        REQUIRE(a.chebyshev_distance(b) == 7.0f);
+        REQUIRE(chebyshev_distance(a, b) == 7.0f);
+    }
+
+    SECTION("Distance to itself is zero")
+    {
+        Vector<int, int> a{4, 8};
+
+        REQUIRE(a.chebyshev_distance(a) == 0.0f);
+        REQUIRE(chebyshev_distance(a, a) == 0.0f);
+    }
+
+    SECTION("Supports heterogeneous coordinate types")
+    {
+        Vector<int, float> a{2, 3.5f};
+        Vector<float, int> b{5.0f, 7};
+
+        REQUIRE(a.chebyshev_distance(b) == 3.5f);
+        REQUIRE(chebyshev_distance(a, b) == 3.5f);
+    }
+
+    SECTION("Works with higher-dimensional vectors")
+    {
+        Vector<int, int, int> a{1, 2, 3};
+        Vector<int, int, int> b{4, 6, 8};
+
+        REQUIRE(a.chebyshev_distance(b) == 5.0f);
+        REQUIRE(chebyshev_distance(a, b) == 5.0f);
+    }
 }

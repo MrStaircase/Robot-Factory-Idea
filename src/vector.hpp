@@ -24,7 +24,7 @@ concept VectorElement = requires(
     { a * b } -> std::convertible_to<T>;
     
     // resetable for move operations
-    { mutable_a = {} } -> std::convertible_to<T&>;
+    { mutable_a = 0 } -> std::convertible_to<T&>;
     
     // binary vector-vector operations
     { a == b } -> std::convertible_to<bool>;
@@ -116,7 +116,7 @@ private:
     template<VectorElement... OtherTypes, std::size_t... I>
     Vector(Vector<OtherTypes...>&& other, std::index_sequence<I...>) :
         values(static_cast<Types>(std::move(std::get<I>(other.values)))...) {
-        ((std::get<I>(other.values) = {}), ...);
+        ((std::get<I>(other.values) = 0), ...);
     }
 
     template<VectorElement... OtherTypes, std::size_t... I>
@@ -127,22 +127,30 @@ private:
     template<VectorElement... OtherTypes, std::size_t... I>
     void move_assignment_helper(Vector<OtherTypes...>&& other, std::index_sequence<I...>){
         ((std::get<I>(values) = static_cast<Types>(std::move(std::get<I>(other.values)))), ...);
-        ((std::get<I>(other.values) = {}), ...);
+        ((std::get<I>(other.values) = 0), ...);
     }
 
-    template<VectorElement... OtherTypes, std::size_t... I>
-    static common_calculation_type<OtherTypes...> dot_helper(
-        const Vector<Types...>& op1,
+    template<
+        typename Operation,
+        typename Accumulator,
+        VectorElement... OtherTypes,
+        std::size_t... I
+    >
+    common_calculation_type<OtherTypes...> calculate_helper(
         const Vector<OtherTypes...>& op2,
+        Operation operation,
+        Accumulator accumulator,
         std::index_sequence<I...>
-    )
-    {
-        using result_type = common_calculation_type<OtherTypes...>;
+    ) const {
+        common_calculation_type<OtherTypes...> initial = 0;
 
-        return (
-            result_type{} + ... + 
-            (static_cast<result_type>(std::get<I>(op1.values) * std::get<I>(op2.values)))
-        );
+        ((initial = accumulator(
+            initial,
+            static_cast<common_calculation_type<OtherTypes...>>(
+                operation(std::get<I>(values), std::get<I>(op2.values))
+        ))), ...);
+
+        return initial;
     }
     
     using normalized_vector = RepeatedType<dimensions, calculation_type>;
@@ -327,7 +335,13 @@ public:
     }
 
     calculation_type squared_size() const noexcept{
-        return dot_helper(*this, *this, std::index_sequence_for<Types...>{});
+        return calculate_helper(
+            *this,
+            [](const auto& a, const auto& b) { return a * b; },
+            [](calculation_type sum, calculation_type value)
+            { return sum + value; },
+            std::index_sequence_for<Types...>{}
+        );;
     }
 
     calculation_type squared_length() const noexcept{
@@ -379,11 +393,11 @@ public:
     }
 
     template<VectorElement... OtherTypes>
+    requires (sizeof...(Types) == sizeof...(OtherTypes))
     friend auto operator+(
         const Vector<Types...>& op1,
         const Vector<OtherTypes...>& op2
     )
-    requires (sizeof...(Types) == sizeof...(OtherTypes))
     {
         return arithmetic_helper(
             op1,
@@ -395,13 +409,13 @@ public:
     }
 
     template<typename S>
-    friend auto operator+(
-        const Vector<Types...>& op1,
-        const S& op2
-    )
     requires (
         NotVector<S> &&
         (... && ScalarOf<S, Types>)
+    )
+    friend auto operator+(
+        const Vector<Types...>& op1,
+        const S& op2
     )
     {
         return arithmetic_helper(
@@ -412,13 +426,13 @@ public:
     }
 
     template<typename S>
-    friend auto operator+(
-        const S& op1,
-        const Vector<Types...>& op2
-    )
     requires (
         NotVector<S> &&
         (... && ScalarOf<S, Types>)
+    )
+    friend auto operator+(
+        const S& op1,
+        const Vector<Types...>& op2
     )
     {
         return arithmetic_helper(
@@ -429,11 +443,11 @@ public:
     }
 
     template<VectorElement... OtherTypes>
+    requires (sizeof...(Types) == sizeof...(OtherTypes))
     friend auto operator-(
         const Vector<Types...>& op1,
         const Vector<OtherTypes...>& op2
     )
-    requires (sizeof...(Types) == sizeof...(OtherTypes))
     {
         return arithmetic_helper(
             op1,
@@ -445,13 +459,13 @@ public:
     }
 
     template<typename S>
-    friend auto operator-(
-        const Vector<Types...>& op1,
-        const S& op2
-    )
     requires (
         NotVector<S> &&
         (... && ScalarOf<S, Types>)
+    )
+    friend auto operator-(
+        const Vector<Types...>& op1,
+        const S& op2
     )
     {
         return arithmetic_helper(
@@ -462,13 +476,13 @@ public:
     }
 
     template<typename S>
-    friend auto operator-(
-        const S& op1,
-        const Vector<Types...>& op2
-    )
     requires (
         NotVector<S> &&
         (... && ScalarOf<S, Types>)
+    )
+    friend auto operator-(
+        const S& op1,
+        const Vector<Types...>& op2
     )
     {
         return arithmetic_helper(
@@ -491,29 +505,48 @@ public:
     }
 
     template<VectorElement... OtherTypes>
+    requires (
+        sizeof...(Types) == sizeof...(OtherTypes)
+    )
     friend common_calculation_type<OtherTypes...> operator*(
         const Vector<Types...>& op1,
         const Vector<OtherTypes...>& op2
     )
+    {
+        return op1.calculate_helper(
+            op2,
+            [](const auto& a, const auto& b) { return a * b; },
+            [](common_calculation_type<OtherTypes...> sum, common_calculation_type<OtherTypes...> value)
+            { return sum + value; },
+            std::index_sequence_for<Types...>{}
+        );
+    }
+    
+    template<VectorElement... OtherTypes>
     requires (
         sizeof...(Types) == sizeof...(OtherTypes)
     )
+    common_calculation_type<OtherTypes...> dot_product(
+        const Vector<OtherTypes...>& op2
+    ) const
     {
-        return dot_helper(
-            op1,
+        return calculate_helper(
             op2,
+            [](const auto& a, const auto& b) { return a * b; },
+            [](common_calculation_type<OtherTypes...> sum, common_calculation_type<OtherTypes...> value)
+            { return sum + value; },
             std::index_sequence_for<Types...>{}
         );
     }
 
     template<typename S>
-    friend auto operator*(
-        const Vector<Types...>& op1,
-        const S& op2
-    )
     requires (
         NotVector<S> &&
         (... && ScalarOf<S, Types>)
+    )
+    friend auto operator*(
+        const Vector<Types...>& op1,
+        const S& op2
     )
     {
         return arithmetic_helper(
@@ -524,13 +557,13 @@ public:
     }
 
     template<typename S>
-    friend auto operator*(
-        const S& op1,
-        const Vector<Types...>& op2
-    )
     requires (
         NotVector<S> &&
         (... && ScalarOf<S, Types>)
+    )
+    friend auto operator*(
+        const S& op1,
+        const Vector<Types...>& op2
     )
     {
         return arithmetic_helper(
@@ -541,13 +574,13 @@ public:
     }
 
     template<typename S>
-    friend auto operator/(
-        const Vector<Types...>& op1,
-        const S& op2
-    )
     requires (
         NotVector<S> &&
         (... && ScalarOf<S, Types>)
+    )
+    friend auto operator/(
+        const Vector<Types...>& op1,
+        const S& op2
     )
     {
         if (op2 == 0) throw std::overflow_error("division by zero");
@@ -559,12 +592,12 @@ public:
     }
 
     template<VectorElement... OtherTypes>
-    Vector& operator+=(
-        const Vector<OtherTypes...>& other
-    )
     requires (
         sizeof...(Types) == sizeof...(OtherTypes) &&
         (IsArithmeticAssignable<Types, OtherTypes> && ...)
+    )
+    Vector& operator+=(
+        const Vector<OtherTypes...>& other
     )
     {
         arithmetic_assignment_helper(
@@ -578,12 +611,12 @@ public:
     }
 
     template<VectorElement... OtherTypes>
-    Vector& operator+=(
-        Vector<OtherTypes...>&& other
-    )
     requires (
         sizeof...(Types) == sizeof...(OtherTypes) &&
         (IsArithmeticAssignable<Types, OtherTypes> && ...)
+    )
+    Vector& operator+=(
+        Vector<OtherTypes...>&& other
     )
     {
         arithmetic_assignment_helper(
@@ -598,12 +631,12 @@ public:
     }
 
     template<VectorElement... OtherTypes>
-    Vector& operator-=(
-        const Vector<OtherTypes...>& other
-    )
     requires (
         sizeof...(Types) == sizeof...(OtherTypes) &&
         (IsArithmeticAssignable<Types, OtherTypes> && ...)
+    )
+    Vector& operator-=(
+        const Vector<OtherTypes...>& other
     )
     {
         arithmetic_assignment_helper(
@@ -653,11 +686,90 @@ public:
     }
 
     template<VectorElement... OtherTypes, typename T>
+    requires (sizeof...(Types) == sizeof...(OtherTypes))
     auto lerp(const Vector<OtherTypes...>& other, const T& t) const
     {
         return *this + (other - *this) * t;
     }
+
+    struct VectorHash {
+        std::size_t operator()(const Vector<Types...>& vector) const noexcept {
+            std::size_t seed = 0;
+
+            [&]<std::size_t... I>(std::index_sequence<I...>) {
+                (
+                    (seed ^= std::hash<Types>{}(vector.template get<I>())
+                        + 0x9e3779b9
+                        + (seed << 6)
+                        + (seed >> 2)),
+                    ...
+                );
+            }(std::index_sequence_for<Types...>{});
+
+            return seed;
+        }
+    };
+
+    template<VectorElement... OtherTypes>
+    requires (sizeof...(Types) == sizeof...(OtherTypes))
+    common_calculation_type<OtherTypes...> manhattan_distance(
+        const Vector<OtherTypes...>& op2
+    ) const {
+        return calculate_helper(
+            op2,
+            [](const auto& a, const auto& b) { return std::abs(a - b); },
+            [](common_calculation_type<OtherTypes...> sum,
+                common_calculation_type<OtherTypes...> value)
+                { return sum + value; },
+            std::index_sequence_for<Types...>{}
+        );
+    }
+
+    template<VectorElement... OtherTypes>
+    requires (sizeof...(Types) == sizeof...(OtherTypes))
+    common_calculation_type<OtherTypes...> chebyshev_distance(
+        const Vector<OtherTypes...>& op2
+    ) const {
+        return calculate_helper(
+            op2,
+            [](const auto& a, const auto& b) { return std::abs(a - b); },
+            [](common_calculation_type<OtherTypes...> maximum,
+                common_calculation_type<OtherTypes...> value)
+                { return std::max(maximum, value); },
+            std::index_sequence_for<Types...>{}
+        );
+    }
+
+    template<VectorElement... OtherTypes>
+    requires (sizeof...(Types) == sizeof...(OtherTypes))
+    friend common_calculation_type<OtherTypes...> manhattan_distance(
+        const Vector<Types...>& op1,
+        const Vector<OtherTypes...>& op2
+    ) {
+        return op1.manhattan_distance(op2);
+    }
+
+    template<VectorElement... OtherTypes>
+    requires (sizeof...(Types) == sizeof...(OtherTypes))
+    friend common_calculation_type<OtherTypes...> chebyshev_distance(
+        const Vector<Types...>& op1,
+        const Vector<OtherTypes...>& op2
+    ) {
+        return op1.chebyshev_distance(op2);
+    }
 };
+
+namespace std {
+
+    template<VectorElement... Types>
+    struct hash<Vector<Types...>> {
+        std::size_t operator()(const Vector<Types...>& vector) const noexcept {
+            typename Vector<Types...>::VectorHash hasher;
+            return hasher(vector);
+        }
+    };
+
+}
 
 class Vector2 : public Vector<float, float>{
 public:
@@ -675,6 +787,9 @@ public:
     Vector2(const Vector2&);
     Vector2(Vector2&&);
 
+    Vector2(const Vector<float, float>&);
+    Vector2(Vector<float, float>&&);
+
     Vector2& operator=(const Vector2&);
     Vector2& operator=(Vector2&&);
 
@@ -684,6 +799,16 @@ public:
 
     Vector2 rotated(const float&) const noexcept;
 };
+
+namespace std {
+    template<>
+    struct hash<Vector2> {
+        std::size_t operator()(const Vector2& vector) const noexcept {
+            typename Vector<float, float>::VectorHash hasher;
+            return hasher(vector);
+        }
+    };
+}
 
 template<>
 struct IsVector<Vector2> : std::true_type {};
@@ -700,9 +825,22 @@ public:
     Vector2I(const Vector2I&);
     Vector2I(Vector2I&&);
 
+    Vector2I(const Vector<int, int>&);
+    Vector2I(Vector<int, int>&&);
+
     Vector2I& operator=(const Vector2I&);
     Vector2I& operator=(Vector2I&&);
 };
 
 template<>
 struct IsVector<Vector2I> : std::true_type {};
+
+namespace std {
+    template<>
+    struct hash<Vector2I> {
+        std::size_t operator()(const Vector2I& vector) const noexcept {
+            typename Vector<int, int>::VectorHash hasher;
+            return hasher(vector);
+        }
+    };
+}
