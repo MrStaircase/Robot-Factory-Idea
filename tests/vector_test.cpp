@@ -277,13 +277,16 @@ TEST_CASE("Vector2 initialiers", "[Vector]"){
     c.y += 7.0f;
     REQUIRE(c == Vector{6.0f, 7.0f});
 
-    Vector2 d;
+    Vector2<float, float> d;
 
     d.x = 6.0f;
     d.y += 7.0f;
     REQUIRE(d == Vector{6.0f, 7.0f});
 
     Vector2 e = Vector<int, float>{4, 5};
+
+    Vector2<int, int> f;
+    f = Vector<int, float>{4, 5};
 }
 
 TEST_CASE("Vector2 angle, rotated", "[Vector]"){

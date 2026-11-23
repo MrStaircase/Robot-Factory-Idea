@@ -3,25 +3,25 @@
 #include "vector.hpp"
 #include <vector>
 
-template<VectorElement... Types>
-class Grid{
+template<typename IndexType, VectorElement... Types>
+class BaseGrid{
 public:
     static constexpr std::size_t dimensions = sizeof...(Types);
 
     using Coordinates = Vector<Types...>;
-    using Index = RepeatedType<dimensions, int>;
+    using Index = IndexType;
 
     Coordinates origin;
     Coordinates basis;
 
     Index size = Index{} - 1;
 
-    Grid() = default;
+    BaseGrid() = default;
 
-    Grid(const Coordinates& _center, const Coordinates& _basis) :
+    BaseGrid(const Coordinates& _center, const Coordinates& _basis) :
         origin(_center), basis(_basis) { }
 
-    Grid(const Coordinates& _center, const Coordinates& _basis, const Index& _size) :
+    BaseGrid(const Coordinates& _center, const Coordinates& _basis, const Index& _size) :
         origin(_center), basis(_basis), size(_size) { }
 
     Coordinates get_global_position(const RepeatedType<dimensions, int>& position){
@@ -120,9 +120,12 @@ private:
 
 };
 
-class Grid2 : public Grid<float, float>{
+template<VectorElement... Types>
+using Grid = BaseGrid<RepeatedType<sizeof...(Types), int>, Types...>;
+
+class Grid2 : public BaseGrid<Vector2<int, int>, float, float>{
 public:
-    using Grid<float, float>::Grid;
+    using BaseGrid<Vector2<int, int>, float, float>::BaseGrid;
 
     std::vector<Index> get_neighbors_4(const Index& position){
         return get_cardinal_neighbors(position);

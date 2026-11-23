@@ -771,76 +771,121 @@ namespace std {
 
 }
 
-class Vector2 : public Vector<float, float>{
+template<typename T, typename U>
+class Vector2 : public Vector<T, U>{
+private:
+    void reset_cooardinates(){
+        x = std::get<0>(this->values);
+        y = std::get<1>(this->values);
+    };
 public:
-    static const Vector2 ZERO;
-    static const Vector2 UP;
-    static const Vector2 DOWN;
-    static const Vector2 LEFT;
-    static const Vector2 RIGHT;
+    inline static const Vector2 ZERO{0, 0};
+    inline static const Vector2 UP{0, -1};
+    inline static const Vector2 DOWN{0, 1};
+    inline static const Vector2 LEFT{-1, 0};
+    inline static const Vector2 RIGHT{1, 0};
     
-    using Vector<float, float>::Vector;
+    T& x = std::get<0>(this->values);
+    U& y = std::get<1>(this->values);
 
-    float& x = std::get<0>(this->values);
-    float& y = std::get<1>(this->values);
+    Vector2() : Vector<T, U>(){
+        reset_cooardinates();
+    }
+    
+    Vector2(const T& x, const U& y) : Vector<T, U>(x, y){
+        reset_cooardinates();
+    }
 
-    Vector2(const Vector2&);
-    Vector2(Vector2&&);
+    Vector2(const Vector2& other) : Vector<T, U>(other){
+        reset_cooardinates();
+    }
 
-    Vector2(const Vector<float, float>&);
-    Vector2(Vector<float, float>&&);
+    Vector2(Vector2&& other) : Vector<T, U>(std::move(other)){
+        reset_cooardinates();
+    }
 
-    Vector2& operator=(const Vector2&);
-    Vector2& operator=(Vector2&&);
+    Vector2(const Vector<T, U>& other) : Vector<T, U>(other){
+        reset_cooardinates();
+    }
 
-    float angle_to(const Vector2&) const noexcept;
+    Vector2(Vector<T, U>&& other) : Vector<T, U>(std::move(other)){
+        reset_cooardinates();
+    }
 
-    float angle() const noexcept;
+    Vector2& operator=(const Vector2& other) {
+        x = other.x;
+        y = other.y;
 
-    Vector2 rotated(const float&) const noexcept;
+        return *this;
+    }
+
+    Vector2& operator=(Vector2&& other){
+        x = std::move(other.x);
+        y = std::move(other.y);
+
+        other.x = 0;
+        other.y = 0;
+
+        return *this;
+    }
+
+    template<typename OtherT, typename OtherU>
+    Vector2& operator=(const Vector<OtherT, OtherU>& other){
+        Vector<T, U>::operator=(other);
+        
+        reset_cooardinates();
+
+        return *this;
+    }
+    template<typename OtherT, typename OtherU>
+    Vector2& operator=(Vector<OtherT, OtherU>&& other){
+        Vector<T, U>::operator=(std::move(other));
+
+        reset_cooardinates();
+
+        return *this;
+    }
+
+    template<typename OtherT, typename OtherU>
+    Vector<T, U>::template common_calculation_type<OtherT, OtherU> angle_to(
+        const Vector2<OtherT, OtherU>& other
+    ) const noexcept{
+        using result = Vector<T, U>::template common_calculation_type<OtherT, OtherU>;
+
+        result cross_product = x * other.y - y * other.x;
+        result dot_product = x * other.x + y * other.y;
+        
+        result angle = std::atan2(cross_product, dot_product);
+
+        result pi = std::numbers::pi_v<result>;
+
+        return angle < 0 ? angle + 2 * pi : angle;
+    }
+
+    float angle() const noexcept{
+        return RIGHT.angle_to(*this);
+    }
+
+    Vector2<typename Vector<T, U>::calculation_type, typename Vector<T, U>::calculation_type> rotated(
+        const float& angle
+    ) const noexcept{
+        return {x * std::cos(angle) - y * std::sin(angle),
+            x * std::sin(angle) + y * std::cos(angle)};
+    }
 };
 
 namespace std {
-    template<>
-    struct hash<Vector2> {
-        std::size_t operator()(const Vector2& vector) const noexcept {
-            typename Vector<float, float>::VectorHash hasher;
+    template<typename T, typename U>
+    struct hash<Vector2<T, U>> {
+        std::size_t operator()(const Vector2<T, U>& vector) const noexcept {
+            typename Vector<T, U>::VectorHash hasher;
             return hasher(vector);
         }
     };
 }
 
-template<>
-struct IsVector<Vector2> : std::true_type {};
+template<typename T, typename U>
+struct IsVector<Vector2<T, U>> : std::true_type {};
 
-using Vector2F = Vector2;
-
-class Vector2I: public Vector<int, int>{
-public:
-    using Vector<int, int>::Vector;
-
-    int& x = std::get<0>(this->values);
-    int& y = std::get<1>(this->values);
-
-    Vector2I(const Vector2I&);
-    Vector2I(Vector2I&&);
-
-    Vector2I(const Vector<int, int>&);
-    Vector2I(Vector<int, int>&&);
-
-    Vector2I& operator=(const Vector2I&);
-    Vector2I& operator=(Vector2I&&);
-};
-
-template<>
-struct IsVector<Vector2I> : std::true_type {};
-
-namespace std {
-    template<>
-    struct hash<Vector2I> {
-        std::size_t operator()(const Vector2I& vector) const noexcept {
-            typename Vector<int, int>::VectorHash hasher;
-            return hasher(vector);
-        }
-    };
-}
+using Vector2F = Vector2<float, float>;
+using Vector2I = Vector2<int, int>;
