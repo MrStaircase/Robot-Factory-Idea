@@ -22,7 +22,7 @@ public:
         bool operator>(const vector_priority&) const ;
     };
 
-    static constexpr float UNPASSABLE {-1};
+    inline static float constexpr UNPASSABLE = -1;
 
     Pathfinder(const Grid2&);
 
@@ -53,6 +53,16 @@ public:
     ) const ;
 
     std::vector<Vector2I> a_star_diagonal(
+        const Vector2I&,
+        const Vector2I&
+    ) const ;
+
+    std::vector<Vector2I> dijkstra_cardinal(
+        const Vector2I&,
+        const Vector2I&
+    ) const ;
+
+    std::vector<Vector2I> dijkstra_diagonal(
         const Vector2I&,
         const Vector2I&
     ) const ;

@@ -1,5 +1,7 @@
 #include "path_find.hpp"
 
+#include <iostream>
+
 bool Pathfinder::vector_priority::operator<(const vector_priority& other) const{
     return priority < other.priority;
 }
@@ -43,7 +45,10 @@ std::vector<Vector2I> Pathfinder::a_star(
     std::function<float(const Vector2I)> heu =
         std::bind(_heu, std::placeholders::_1, goal);
 
-    std::priority_queue<vector_priority> open_set;
+    std::priority_queue<vector_priority,
+        std::vector<vector_priority>,
+        std::greater<vector_priority>
+    > open_set;
 
     open_set.push(vector_priority{start, heu(start)});
 
@@ -59,7 +64,7 @@ std::vector<Vector2I> Pathfinder::a_star(
 
     while (!open_set.empty()){
         Vector2I current = open_set.top().vector;
-        
+
         if (current == goal){
             return reconstruct_path(came_from, goal);
         }
@@ -78,7 +83,13 @@ std::vector<Vector2I> Pathfinder::a_star(
 
             float tentative_g_score = g_score.at(current) + weight;
 
-            if (!g_score.contains(neighbor) || tentative_g_score < g_score.at(neighbor)){
+            bool is_better_g_score = true;
+
+            if (g_score.contains(neighbor)){
+                is_better_g_score = tentative_g_score < g_score.at(neighbor);
+            }
+
+            if (is_better_g_score){
                 came_from.insert_or_assign(neighbor, current);
                 g_score.insert_or_assign(neighbor, tentative_g_score);
 
@@ -97,18 +108,42 @@ std::vector<Vector2I> Pathfinder::a_star_cardinal(
     const Vector2I& start,
     const Vector2I& goal
 ) const {
-    // return a_star(
-    //     start, goal,
-    //     [this](const Vector2I& vec){ return _grid.get_cardinal_neighbors(vec); },
-    //     [](const Vector2I& a, const Vector2I& b){ return a.manhattan_distance(b); }
-    // );
-    return {};
+    return a_star(
+        start, goal,
+        [this](const Vector2I& vec){ return _grid.get_cardinal_neighbors(vec); },
+        [](const Vector2I& a, const Vector2I& b){ return a.manhattan_distance(b); }
+    );
 }
 
 std::vector<Vector2I> Pathfinder::a_star_diagonal(
     const Vector2I& start,
     const Vector2I& goal
 ) const {
-    // return a_star(start, goal, _grid.get_diagonal_neighbors, );
-    return {};
+    return a_star(
+        start, goal,
+        [this](const Vector2I& vec){ return _grid.get_diagonal_neighbors(vec); },
+        [](const Vector2I& a, const Vector2I& b) { return a.chebyshev_distance(b);}
+    );
+}
+
+std::vector<Vector2I> Pathfinder::dijkstra_cardinal(
+    const Vector2I& start,
+    const Vector2I& goal
+) const {
+    return a_star(
+        start, goal,
+        [this](const Vector2I& vec){ return _grid.get_cardinal_neighbors(vec); },
+        [](const Vector2I&, const Vector2I&) { return 0; }
+    );
+}
+
+std::vector<Vector2I> Pathfinder::dijkstra_diagonal(
+    const Vector2I& start,
+    const Vector2I& goal
+) const {
+    return a_star(
+        start, goal,
+        [this](const Vector2I& vec){ return _grid.get_diagonal_neighbors(vec); },
+        [](const Vector2I&, const Vector2I&) { return 0; }
+    );
 }
