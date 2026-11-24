@@ -94,6 +94,10 @@ public:
         return registry.create();
     }
 
+    entt::entity create(){
+        return registry.create();
+    }
+
     template<typename Component>
     Component& get(const entt::entity& entity){
         return registry.get<Component>(entity);
@@ -116,13 +120,29 @@ public:
     void set(const entt::entity& entity, const Component& value){
         registry.emplace_or_replace<Component>(entity, value);
     }
+    
     template<typename Component>
     void set(const entt::entity& entity, Component&& value){
         registry.emplace_or_replace<Component>(entity, std::move(value));
     }
 
+    template<typename Component>
+    void emplace(const entt::entity& entity, const Component& value){
+        registry.emplace_or_replace<Component>(entity, value);
+    }
+    
+    template<typename Component>
+    void emplace(const entt::entity& entity, Component&& value){
+        registry.emplace_or_replace<Component>(entity, std::move(value));
+    }
+
     template<typename... Components>
     bool has_all(const entt::entity& entity) const{
+        return registry.all_of<Components...>(entity);
+    }
+    
+    template<typename... Components>
+    bool all_of(const entt::entity& entity) const{
         return registry.all_of<Components...>(entity);
     }
 
