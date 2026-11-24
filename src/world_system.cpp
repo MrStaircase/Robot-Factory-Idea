@@ -8,17 +8,18 @@ WorldSystem::WorldSystem(Registry& _registry, const Grid2& _grid) :
 WorldSystem::WorldSystem(Registry& _registry, Grid2&& _grid) :
     registry(_registry), grid(std::move(_grid)) { }
 
-void something(Grid2 grid, const Transform& t, const FindPath& f){
-    WorldSystem::find_path(t.position, f.goal);
-}
-
-void WorldSystem::find_path(const Vector2I& start, const Vector2I& goal){
-
+void WorldSystem::find_path(const entt::entity& entity, const Transform& t, FindPath& f){
+    Pathfinder::WeightMap weight_map{};
+    Pathfinder pathfinder{grid};
+    FollowPath path{pathfinder.a_star_cardinal(t.position, f.goal)};
+    
+    registry.remove<FindPath>(entity);
+    registry.set<FollowPath>(entity, path);
 }
 
 void WorldSystem::init(){}
 
 void WorldSystem::update(){
     auto view = registry.view<Transform, FindPath>();
-    view.each(std::bind(something, grid, std::placeholders::_1, std::placeholders::_2));
+    view.each(std::bind(find_path, grid, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 }

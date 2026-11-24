@@ -22,6 +22,8 @@ public:
         bool operator>(const vector_priority&) const ;
     };
 
+    using WeightMap = std::unordered_map<Vector2I, float>;
+
     inline static float constexpr UNPASSABLE = -1;
 
     Pathfinder(const Grid2&);
