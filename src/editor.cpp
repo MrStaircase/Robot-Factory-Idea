@@ -26,7 +26,8 @@ void Editor::iterate(){
 
     ImGui::Begin("Editor");
 
-    if (ImGui::Button("Pause")){
+    // "###pause" keeps the ImGui ID stable while the visible label changes
+    if (ImGui::Button(registry.game_state().paused ? "Play###pause" : "Pause###pause")){
         registry.game_state().paused = !registry.game_state().paused;
     }
 
