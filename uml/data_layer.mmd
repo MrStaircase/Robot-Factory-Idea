@@ -3,73 +3,75 @@ classDiagram
 %%  shall be coupled. This to mainly to show we can make a loose couple between the two
 %%  layers. This is also not a comprehensive diagram.
 
-    namespace _Main ["Main"]{
-        class Main{
-            <<composition root>>
-            + main() int
-        }
+%% Coincidentally this diagram fits well for the visual presentation, with some changes.
+
+namespace _Main ["Main"]{
+    class Main{
+        <<composition root>>
+        + main() int
     }
+}
 
-    namespace Engine{
-        namespace DataContract{
-            class IPersistence{
-                <<interface>>
-                + ~IPersistence()
-                + load(Registry&) bool
-                + save(const Registry&) void
-            }
-        }
-
-        namespace Core{
-            class Registry{
-                <<out of scope>>
-            }
-            
-            class Type{
-                <<out of scope>>
-                
-                %% Refers to registry types such as Transform, Grid, etc.
-            }
-
-        }
-
-        class Implementation{
-            %% name pending
-            - _persistence: IPersistence& 
-            - registry: Registry
-            + Implementation(IPersistence&)
-        }
-    }
-
-    namespace Database{
-        class JsonPersistence{
-            - data_manager: DataManager&
+namespace Engine{
+    namespace DataContract{
+        class IPersistence{
+            <<interface>>
+            + ~IPersistence()
             + load(Registry&) bool
             + save(const Registry&) void
         }
-
-        class DataManager{
-            - factories: std::map~std::string, Factory~
-            + register_component~T~(const std::string& json_key) bool
-        }
-
-        class Factory{
-            + to_json(const T&, nlohmann::json&) void
-            + from_json(T&, const nlohmann::json&) void
-        }
     }
 
-    Implementation o-- IPersistence
-    Implementation *-- "1" Registry: owns
-    JsonPersistence ..|> IPersistence
-    IPersistence ..> Registry: loads, saves
-    JsonPersistence ..> Registry: loads, saves
-    JsonPersistence ..> DataManager: uses factories
-    DataManager *-- Factory
-    DataManager --> Type: registers
-    Factory --> Type: de/serialize
-    Registry *-- "*" Type: stores
+    namespace Core{
+        class Registry{
+            <<out of scope>>
+        }
+        
+        class Type{
+            <<out of scope>>
+            
+            %% Refers to registry types such as Transform, Grid, etc.
+        }
 
-    Main ..> DataManager: creates
-    Main ..> JsonPersistence: creates, injects data_manager
-    Main ..> Implementation: creates, injects persistence
+    }
+
+    class Implementation{
+        %% name pending
+        - persistence: IPersistence& 
+        - registry: Registry
+        + Implementation(IPersistence&)
+    }
+}
+
+namespace Database{
+    class JsonPersistence{
+        - data_manager: DataManager&
+        + load(Registry&) bool
+        + save(const Registry&) void
+    }
+
+    class DataManager{
+        - factories: std::map~std::string, Factory~
+        + register_component~T~(const std::string& json_key) bool
+    }
+
+    class Factory~T~{
+        + to_json(const T&, nlohmann::json&) void
+        + from_json(T&, const nlohmann::json&) void
+    }
+}
+
+Implementation o-- IPersistence
+Implementation *-- "1" Registry: owns
+JsonPersistence ..|> IPersistence
+IPersistence ..> Registry: loads, saves
+JsonPersistence ..> Registry: loads, saves
+JsonPersistence ..> DataManager: uses factories
+DataManager *-- Factory
+DataManager --> Type: registers
+Factory --> Type: de/serialize
+Registry *-- "*" Type: stores
+
+Main ..> DataManager: 1. creates
+Main ..> JsonPersistence: 2. creates, injects data_manager
+Main ..> Implementation: 3. creates, injects persistence

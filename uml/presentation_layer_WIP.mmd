@@ -1,0 +1,72 @@
+classDiagram
+
+%% This is an abandoned WIP for better diagram see data_layer.mmd
+
+%% This diagram illustrate how does the control layer (Engine) and the presentation layer (Window)
+%%  shall be coupled. This to mainly to show we can make a loose couple between the two
+%%  layers. This is also not a comprehensive diagram.
+
+namespace _Main ["Main"]{
+    class Main{
+        +main() int
+    }
+}
+
+namespace Presentation{
+    class SDLPresenter{
+        -manager: DrawableManager&
+
+        +draw(const Registry&) void
+    }
+
+    class DrawableManager{
+        +drawables: std::map~std::type_index, Drawable~
+        +register_drawable~T~() bool
+    }
+
+    class Drawable~T~{
+        +draw(const T&) void
+    }
+}
+
+namespace Engine{
+    class Implementation{
+        %% name pending
+        %% Registry injected by main before
+        -registry: Registry&
+        -presentor: IPresenter&
+    }
+
+    namespace DrawContract{
+        class IPresenter{
+            <<interface>>
+            +draw(const Registry&) void
+        }
+    }
+
+    namespace Core{
+        class Registry{
+            <<out of scope>>
+        }
+
+        class Type {
+            <<out of scope>>
+        }
+    }
+}
+
+Registry *--"*" Type: stores
+Implementation *--"1" Registry: owns
+Implementation o-- IPresenter: draw
+IPresenter ..> Registry
+
+SDLPresenter ..> Registry
+
+SDLPresenter ..> DrawableManager: uses drawables
+SDLPresenter ..|> IPresenter: realizes
+Drawable ..> Type: define draw
+DrawableManager *-- Drawable: owns
+
+Main ..> DrawableManager: 1 creates
+Main ..> SDLPresenter: 2 creates, inject manager
+Main ..> Implementation: 3 creates, inject presentor

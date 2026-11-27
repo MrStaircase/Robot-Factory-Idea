@@ -1,0 +1,99 @@
+classDiagram
+
+%% This diagram shall illustrate the class relations in the logic layer of the engine.
+%%  This diagram does not show concrete system and type but an example of.
+
+%% The example below show the path finding system which when called by iterate
+%%  which will, for each entity having both Transform and FindPath, get its
+%%  position and goal, calls path_finder.dijsktra to calculate the shortest path
+%%  from position to goal. If a path exists, the system shall remove FindPath
+%%  and emplace FollowPath with the path found. If the path does not exist, PathError
+%%  is emplaced (TBD, with/out deleting FindPath).
+
+class EntryPoint{
+    %% name pending
+    -registry: Registry
+    -grid: Grid
+    -systems: std::unique_ptr~ISystem~
+}
+
+EntryPoint *-- Grid: 1 creates
+EntryPoint ..> PathFinderSystem: 2 creates, injects grid, iterate
+EntryPoint *-- Registry: 3 creates
+EntryPoint *--"*" ISystem: emplaces system
+
+namespace _System ["System"]{
+    class ISystem{
+        <<interface>>
+        +iterate(Registry&) void
+    }
+
+    class PathFinderSystem{
+        <<system>>
+        -grid: Grid&
+        -path_finder: PathFinder
+        +iterate(Registry&) void
+    }
+
+    class PathFinder{
+        <<serializable>>
+        -grid: Grid&
+        +dijkstra(start: Vector2I, goal: Vector2I) std::vector~Vecotr2I~
+    }
+}
+PathFinderSystem ..|> ISystem
+
+PathFinderSystem *-- PathFinder: injects grid
+PathFinderSystem o-- Grid
+PathFinderSystem ..> Vector2I
+PathFinderSystem ..> FindPath
+PathFinderSystem ..> FollowPath
+PathFinderSystem ..> Transform
+PathFinderSystem ..> PathError
+
+PathFinder ..> Vector2I
+PathFinder ..> Grid
+
+namespace Core{
+    class Registry{
+        -registry: entt::registry
+    }
+
+    class FindPath{
+        <<component>>
+        +goal Vector2I 
+    }
+
+    class Transform{
+        <<component>>
+        +position Vector2I 
+    }
+    
+    class FollowPath{
+        <<component>>
+        +path std::vector~Vecotr2I~
+    }
+
+    class PathError{
+        <<component>>
+    }
+
+    class Vector2I{
+        <<serializeable>>
+        +x int
+        +y int
+    }
+
+    class Grid{
+        <<serializeable>>
+        -size: Vector2I
+    }
+}
+Registry *--"*" FindPath
+Registry *--"*" Transform
+Registry *--"*" FollowPath
+Registry *--"*" PathError
+
+FindPath *-- Vector2I
+Transform *-- Vector2I
+FollowPath  *-- Vector2I
