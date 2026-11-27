@@ -1,0 +1,123 @@
+sequenceDiagram
+
+%% This sequence diagram illustrates the startup, run loop and shutdown actions
+%%  between the player, engine, database, and window presentation. All represent the same program.
+
+%% The Engine refers to the logic or control layer of the program. This includes class definition
+%%  without taking serialization or deserialization. The init(), iterate() and quit() refers to
+%%  the control forking calls, using concurrency, the respective functions in the systems of the game.
+%%  This is deliberately out of scope, because it is the largest layer, thus simply illustrated
+%%  as a self call followed by a join_threads().
+%%  Engine is also the owner of a Registry and the orchestrator of the program
+
+%% The Window refers to the presentation layer of the program. This is the OS event source
+
+%% The Database refers to the data layer of the program. This layer includes the DataManager
+%%  that include factories to all classes that require serialization.
+
+%% The program will use concurrency. The exact implementation is TBD.
+
+%% Registry is a class defined in the engine that encapsulates an entt::registry.
+%%  In accordance with cpp foo(T) passes by value (copy) while foo(T&) passes by reference.
+
+%% Event handles os events such as mouse click, keyboard presses, etc.
+
+%% Conventions: methods as lower_snake_case, classes as PascalCase, messages represent method calls.
+%%  messages with return are synchronous while calls without return are asynchronous.
+%%  UML parts encapsulated by opt and marked with TBD are parts that represent potential
+%%  implementation that may be scrapped.
+
+participant D as Database
+actor P as Player
+
+%% Startup
+rect rgb(50, 50, 0)
+
+    create participant E as Engine
+    P->>E: open game
+
+    critical Retrieve Game State
+        E->>+D: void load(Registry&)
+        D-->>-E: return
+    option No Data Exists (first run)
+        E->>E: void load_default_registry(Registry&)
+    option Failure
+        critical Attemp Recovery
+            E->>+D: void attemp_recovery()
+            D-->>-E: return
+            E->>+D: void load(Registry&)
+            D-->>-E: return
+            
+        option Failure
+            E->>E: void load_default_registry(Registry&)
+        end
+    end
+
+    E->>+E: void init(Registry&)
+    E->>E: void join_threads() 
+    deactivate E
+
+    create participant W as Window
+    E->>W: void create_window()
+    W-->>E: return
+    W->>P: present window
+
+end
+
+%% run loop
+rect rgb(0, 50, 0)
+
+    loop Run Loop While No StopEvent
+        note left of E: Will loop either<br/> after frame rendered<br/> or a tick rate 
+        
+        P->>W: input
+        E->>+W: std::vector<Event> get_input()
+        W-->>-E: return
+
+        opt LoadEvent
+            note left of E: This is a specific <br/> load is required
+            E->>+D: load(Registry&)
+            D-->>-E: return
+        end
+
+        note right of E: if close event, stop loop
+        E->>+E: iterate(Registry&)
+
+        E->>E: void join_threads() 
+        deactivate E
+
+
+        par %% TBD
+            note left of E: This is critical and<br/> potentially dangerous
+            E->>+D: void save(const Registry)
+            deactivate D
+        and 
+            E->>+W: update(const Registry&)
+            W-->>-E: return
+        end
+
+    end
+
+end
+
+%% shutdown
+rect rgb(100, 0, 0)
+
+    opt Closing App 
+        P->>E: close
+    end
+
+    
+    opt save %%TBD
+        E->>+D: void save(const Registry)
+        deactivate D
+    end
+
+    E->>+E: void quit(Registry&)
+    E->>E: void join_threads()
+    deactivate E
+
+    destroy W
+    E->>W: void quit()
+
+end
