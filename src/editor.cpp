@@ -26,13 +26,17 @@ void Editor::iterate(){
 
     ImGui::Begin("Editor");
 
+    // Pause/Play and Next Frame share one width, sized to the widest label
+    const ImVec2 control_size(ImGui::CalcTextSize("Next Frame").x + ImGui::GetStyle().FramePadding.x * 2.0f, 0.0f);
+    GameState& state = registry.game_state();
+
     // "###pause" keeps the ImGui ID stable while the visible label changes
-    if (ImGui::Button(registry.game_state().paused ? "Play###pause" : "Pause###pause")){
-        registry.game_state().paused = !registry.game_state().paused;
+    if (ImGui::Button(state.paused ? "Play###pause" : "Pause###pause", control_size)){
+        state.paused = !state.paused;
     }
 
-    if (ImGui::Button("Next Frame")){
-        registry.game_state().next_frame = true;
+    if (state.paused && ImGui::Button("Next Frame", control_size)){
+        state.next_frame = true;
     }
 
     if (selected != entt::null){
